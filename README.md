@@ -16,7 +16,7 @@ Open **Terminal** (press `Cmd+Space`, type "Terminal", press Enter). This opens 
 In Terminal, move into this folder (replace the path if you put it somewhere other than Downloads):
 
 ```
-cd ~/Downloads/llm-wiki-boilerplate
+cd ~/Downloads/llm-wiki
 ```
 
 Then run the setup script:
@@ -25,7 +25,7 @@ Then run the setup script:
 bash setup.sh
 ```
 
-It checks what you already have installed and asks before installing anything new — just press Enter to accept each default (yes). It installs, in order: Homebrew (Mac's standard tool installer), Node.js, the Claude Code CLI, and uv. This can take a few minutes, especially the first step.
+It first offers to move this folder to `~/Sites` (creating that folder if it doesn't exist yet), to keep it somewhere tidier than Downloads, and lets you rename it at the same time. Then it checks what you already have installed and asks before installing anything new — just press Enter to accept each default (yes). It installs, in order: Homebrew (Mac's standard tool installer), Node.js, the Claude Code CLI, and uv. This can take a few minutes, especially the first step.
 
 ## 2. Log into Claude Code
 
@@ -45,7 +45,7 @@ If that prints a version number, you're set.
 
 ## 3. Make this vault your own
 
-Open `CLAUDE.md` (a plain text file in this folder) in any text editor and fill in the **Scope** line under "What this is" — whose life or work this wiki covers, and what's out of scope. You can also rename this folder to whatever you want to call your wiki.
+Open `CLAUDE.md` (a plain text file in this folder) in any text editor and fill in the **Scope** line under "What this is" — whose life or work this wiki covers, and what's out of scope.
 
 ## 4. Install Obsidian
 

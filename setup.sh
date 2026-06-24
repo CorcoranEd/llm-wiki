@@ -21,6 +21,31 @@ echo "This will check for the tools this vault needs, and offer to install anyth
 echo "Just press Enter to accept the default (yes) at each prompt."
 echo
 
+# 0. Move this vault into ~/Sites to keep things tidy
+SITES_DIR="$HOME/Sites"
+CURRENT_DIR="$(pwd)"
+CURRENT_NAME="$(basename "$CURRENT_DIR")"
+
+if [ "$(dirname "$CURRENT_DIR")" != "$SITES_DIR" ]; then
+  echo "This vault currently lives at $CURRENT_DIR."
+  if confirm "Move it to $SITES_DIR now?"; then
+    read -r -p "What do you want to call this wiki's folder? [$CURRENT_NAME] " NEW_NAME
+    NEW_NAME="${NEW_NAME:-$CURRENT_NAME}"
+    TARGET_DIR="$SITES_DIR/$NEW_NAME"
+    if [ -e "$TARGET_DIR" ]; then
+      echo "$TARGET_DIR already exists — leaving this copy where it is."
+    else
+      mkdir -p "$SITES_DIR"
+      mv "$CURRENT_DIR" "$TARGET_DIR"
+      cd "$TARGET_DIR" || { echo "Couldn't move into $TARGET_DIR. Aborting."; exit 1; }
+      echo "✓ Moved to $TARGET_DIR"
+    fi
+  else
+    echo "Skipping move — staying in $CURRENT_DIR."
+  fi
+  echo
+fi
+
 # 1. Homebrew
 if have brew; then
   echo "✓ Homebrew is already installed."
@@ -108,6 +133,21 @@ if have uv; then
 fi
 
 # 6. Initialize local git repository for this copy
+if ! have git && have brew; then
+  echo
+  echo "git is needed for local version control of this vault. It usually comes with the Mac, but yours doesn't have it."
+  if confirm "Install git now?"; then
+    brew install git
+    if have git; then
+      echo "✓ git installed."
+    else
+      echo "git install didn't finish correctly. Try running 'brew install git' yourself, then re-run: bash setup.sh"
+    fi
+  else
+    echo "Skipping git — local version control won't be set up."
+  fi
+fi
+
 if have git; then
   if [ ! -d .git ]; then
     echo
@@ -129,7 +169,7 @@ if have git; then
   fi
 else
   echo
-  echo "Note: git is not installed or not available in PATH. If you want local version control, install git and re-run this script."
+  echo "Note: git is not installed or not available in PATH. If you want local version control, install Homebrew and re-run this script, or install git yourself."
 fi
 
 echo
