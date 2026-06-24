@@ -69,6 +69,19 @@ On request, check for:
 
 Log the lint run in `wiki/log.md` with what was found/fixed.
 
+## Version control
+
+This repository is intended to be downloaded and set up locally, so each user should use git on their own copy as a local safety net.
+
+- Keep the repo initialized with a local git repository after cloning.
+- Use git to commit meaningful checkpoints, especially when the vault structure or content changes.
+- Commit message style should be clear and consistent, for example:
+  - `chore: add .gitignore`
+  - `docs: update CLAUDE.md`
+  - `fix: clean ignored macOS artifacts`
+- Do not rely on a shared remote for local workflow correctness; the main goal is to preserve history and enable recovery on the local machine.
+- Pushing to a remote is optional and only for personal backups or collaboration; the workflow is designed to work fully locally.
+
 ## Tooling
 
 - **markitdown** — CLI for converting non-markdown sources (PDF, Word, Excel, images with OCR, audio transcripts, HTML) to markdown during ingest. Run via `uv run markitdown <file>` (a project-local `.venv`, defined by `pyproject.toml`/`uv.lock`, keeps this reproducible across machines — see "Setup on a new machine" below).
