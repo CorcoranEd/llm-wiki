@@ -1,0 +1,1 @@
+Immutable archive of source material. Claude never edits files here after filing. Every wiki page that draws on a source links back to its file here (`[[_raw/filename]]`). This file is just a placeholder so the folder syncs.

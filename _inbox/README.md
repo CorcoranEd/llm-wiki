@@ -1,0 +1,1 @@
+Drop zone. Put anything here (articles, PDFs, photos, scans, voice memos, web clips, raw notes) to be ingested by Claude. Should be empty of *content to process* between ingest sessions — this file is just a placeholder so the folder syncs.

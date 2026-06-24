@@ -1,0 +1,8 @@
+[project]
+name = "wiki-tools"
+version = "0.1.0"
+description = "Tooling dependencies for the LLM-maintained wiki (markitdown for source ingest)"
+requires-python = ">=3.12"
+dependencies = [
+    "markitdown[all]",
+]
