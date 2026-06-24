@@ -43,23 +43,23 @@ claude --version
 
 If that prints a version number, you're set.
 
-## 3. Make this vault your own
-
-Open `CLAUDE.md` (a plain text file in this folder) in any text editor and fill in the **Scope** line under "What this is" — whose life or work this wiki covers, and what's out of scope.
-
-## 4. Install Obsidian
+## 3. Install Obsidian
 
 The setup script should have already opened [obsidian.md](https://obsidian.md) in your browser. Download and install it like any other Mac app, then open it.
 
 When Obsidian asks you to open a vault, choose **Open folder as vault** and select this folder.
 
-## 5. Turn on the Claudian plugin
+## 4. Turn on the Claudian plugin
 
 In Obsidian, go to **Settings → Community plugins** and turn on **Claudian**. It's already included in this folder — it's how Claude Code works inside your vault.
 
+## 5. Make this vault your own
+
+Open the Claudian panel from Obsidian's sidebar and tell Claude what you want this wiki to cover — whose life or work it's for, and what's out of scope. Claude will fill in the **Scope** line under "What this is" in `CLAUDE.md` for you.
+
 ## 6. Try it out
 
-Open the Claudian panel from Obsidian's sidebar and confirm it can see Claude Code. Then drop any file (a PDF, an article, a note) into the `_inbox` folder and ask Claude to file it — that's the wiki's normal way of taking in new material.
+Drop any file (a PDF, an article, a note) into the `_inbox` folder and ask Claude, in the Claudian panel, to file it — that's the wiki's normal way of taking in new material.
 
 ## If something goes wrong
 
