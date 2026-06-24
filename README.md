@@ -66,6 +66,10 @@ Open the Claudian panel from Obsidian's sidebar and confirm it can see Claude Co
 - **"command not found" in Terminal** — close and reopen the Terminal window after an install finishes, then run `bash setup.sh` again. New tools sometimes don't show up until you start a fresh Terminal session.
 - **Claudian doesn't see Claude Code** — run `claude --version` in Terminal first to confirm Claude Code works on its own. If that fails, re-run `bash setup.sh`.
 
+## Why git?
+
+This folder uses git so each copy has its own local history. That means you can undo changes or recover earlier versions without needing a shared remote server.
+
 ## Going deeper
 
 Once the basics are working, `wiki/3-Resources/Meta/llm-wiki.md`, `llm-wiki-v2.md`, and `llm-wiki-v3.md` explain the thinking behind how this wiki is organized — worth reading before you change how `CLAUDE.md` directs Claude's behavior.
