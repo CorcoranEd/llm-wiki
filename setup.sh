@@ -107,6 +107,31 @@ if have uv; then
   echo "✓ Python tooling ready."
 fi
 
+# 6. Initialize local git repository for this copy
+if have git; then
+  if [ ! -d .git ]; then
+    echo
+    echo "Initializing a local git repository for this copy of the vault..."
+    git init
+    if git config --get user.name >/dev/null 2>&1 && git config --get user.email >/dev/null 2>&1; then
+      git add -A
+      git commit -m 'chore: initial local repository setup' >/dev/null 2>&1 || true
+      echo "✓ Local git repository initialized."
+    else
+      echo "✓ Local git repository initialized."
+      echo "  Note: configure git user.name and user.email to make commits:"
+      echo "    git config --global user.name \"Your Name\""
+      echo "    git config --global user.email \"you@example.com\""
+    fi
+  else
+    echo
+    echo "✓ This folder is already a git repository."
+  fi
+else
+  echo
+  echo "Note: git is not installed or not available in PATH. If you want local version control, install git and re-run this script."
+fi
+
 echo
 echo "Terminal setup done. Next steps:"
 echo "  1. If you just installed Claude Code, run 'claude' and log in."
