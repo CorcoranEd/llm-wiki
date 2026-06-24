@@ -68,7 +68,7 @@ Open the Claudian panel from Obsidian's sidebar and confirm it can see Claude Co
 
 ## Why git?
 
-This folder uses git so each copy has its own local history. That means you can undo changes or recover earlier versions without needing a shared remote server.
+This folder uses git, a version control tool, to keep a history of every change. That means you can always undo a mistake or look back at an earlier version of your wiki. You can also create a repository on GitHub and back this folder up there — just ask Claude for help setting that up if you'd like.
 
 ## Going deeper
 
