@@ -8,14 +8,27 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-./}")" 2>/dev/null && pwd)"
 
 if [ ! -f "$SCRIPT_DIR/CLAUDE.md" ] || [ ! -d "$SCRIPT_DIR/_inbox" ]; then
-  echo "Downloading llm-wiki vault from GitHub..."
+  # Running via curl — ask for a name and download directly to ~/Sites
+  _SITES_DIR="$HOME/Sites"
+  mkdir -p "$_SITES_DIR"
+  read -r -p "What do you want to call this wiki's folder? [llm-wiki] " _CURL_NAME
+  _CURL_NAME="${_CURL_NAME:-llm-wiki}"
+  _DEST="$_SITES_DIR/$_CURL_NAME"
+  if [ -e "$_DEST" ]; then
+    echo "A folder named $_CURL_NAME already exists in ~/Sites."
+    echo "Remove it or choose a different name, then re-run."
+    exit 1
+  fi
+  echo "Downloading to $_DEST..."
   _TMPZIP="$(mktemp /tmp/llm-wiki-XXXXXX.zip)"
   _TMPDIR="$(mktemp -d /tmp/llm-wiki-XXXXXX)"
-  curl -fsSL https://github.com/CorcoranEd/llm-wiki/archive/refs/heads/main.zip -o "$_TMPZIP"
+  curl -L -# https://github.com/CorcoranEd/llm-wiki/archive/refs/heads/main.zip -o "$_TMPZIP"
   unzip -q "$_TMPZIP" -d "$_TMPDIR"
   rm -f "$_TMPZIP"
-  SCRIPT_DIR="$_TMPDIR/llm-wiki-main"
-  echo "✓ Vault downloaded."
+  mv "$_TMPDIR/llm-wiki-main" "$_DEST"
+  rm -rf "$_TMPDIR"
+  SCRIPT_DIR="$_DEST"
+  echo "✓ Downloaded to $_DEST"
   echo
 fi
 
