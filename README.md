@@ -19,7 +19,7 @@ Open **Terminal** (press `Cmd+Space`, type "Terminal", hit Enter) and paste this
 
 That's it — no download needed first. The script fetches everything itself, asks what to name your wiki folder, and handles the rest: installing all the tools, downloading Obsidian, and adding a shortcut to your Dock. It only installs what's missing, so it's safe to run again if something goes wrong.
 
-**Already downloaded this folder?** You can also double-click `Setup.command` or run `bash setup.sh` from inside the folder in Terminal.
+**Already downloaded this folder?** `cd` into it in Terminal and run `bash setup.sh`.
 
 ## 2. Log in to Claude Code
 
