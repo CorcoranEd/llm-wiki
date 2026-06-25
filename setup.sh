@@ -246,11 +246,10 @@ echo "  ⚠  LOG IN TO CLAUDE CODE (required)"
 echo "════════════════════════════════════════════════════════"
 echo
 echo "  The wiki won't work until you're logged in."
-echo "  Starting Claude Code now — follow the prompts to"
-echo "  create or sign in to your Anthropic account."
+echo "  Opening a new Terminal window to log you in now..."
 echo
 if have claude; then
-  claude
+  osascript -e 'tell application "Terminal" to do script "claude"'
 else
   echo "  Claude Code isn't on PATH right now."
   echo "  Open a new Terminal window and run:  claude"
