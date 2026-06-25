@@ -1,75 +1,71 @@
 # Setting up this wiki (Mac)
 
-This folder is a starter kit for a personal wiki that an AI helps you maintain. You drop in articles, PDFs, notes, whatever — and it gets filed, cross-referenced, and kept tidy for you. This guide assumes you've never used a terminal or installed developer tools before, and walks through everything needed to get it running.
+This folder is a starter kit for a personal wiki that an AI helps you maintain. You drop in articles, PDFs, notes, whatever — and it gets filed, cross-referenced, and kept tidy for you. This guide assumes you've never used a terminal or installed developer tools before.
+
+> **Downloaded from GitHub?** If the folder is named `llm-wiki-main`, that's normal — the setup script will offer to rename it.
 
 ## What you're installing and why
 
-- **[Obsidian](https://obsidian.md)** — the app you'll actually use to read and write notes.
+- **[Obsidian](https://obsidian.md)** — the app you'll use to read and write notes.
 - **Claude Code** — the AI that does the filing and organizing.
-- **uv** — a small helper tool Claude Code uses to convert PDFs and other documents into text.
-- **Claudian** — an Obsidian plugin that connects Claude Code to your notes, so the AI can work right inside the app.
+- **uv** — a small helper Claude Code uses to convert PDFs and documents into text.
+- **Claudian** — an Obsidian plugin that connects Claude Code to your vault.
 
 ## 1. Run the setup script
 
-Open **Terminal** (press `Cmd+Space`, type "Terminal", press Enter). This opens a window where you type commands instead of clicking — every command below is meant to be copy-pasted in, one at a time, followed by Enter.
+**Double-click `Setup.command`** in this folder. macOS will open a Terminal window and run the setup automatically.
 
-In Terminal, move into this folder (replace the path if you put it somewhere other than Downloads):
+> If macOS says it can't open the file because it's from an unidentified developer: right-click `Setup.command`, choose **Open**, then click **Open** again in the dialog.
 
-```
-cd ~/Downloads/llm-wiki
-```
+The script asks one question — what to name your wiki folder — then handles everything else: moving it to `~/Sites`, installing all the tools, downloading Obsidian, and adding a shortcut to your Dock. It only installs what's missing, so it's safe to run again if something goes wrong.
 
-Then run the setup script:
+**Prefer the terminal?** Open Terminal (`Cmd+Space`, type "Terminal", Enter), `cd` into this folder, and run `bash setup.sh`.
 
-```
-bash setup.sh
-```
+## 2. Log in to Claude Code
 
-It first offers to move this folder to `~/Sites` (creating that folder if it doesn't exist yet), to keep it somewhere tidier than Downloads, and lets you rename it at the same time. Then it checks what you already have installed and asks before installing anything new — just press Enter to accept each default (yes). It installs, in order: Homebrew (Mac's standard tool installer), Node.js, the Claude Code CLI, and uv. This can take a few minutes, especially the first step.
+The script will launch Claude Code at the end and prompt you to log in. Follow the prompts to create or sign in to your Anthropic account. **The wiki won't work until this is done.**
 
-## 2. Log into Claude Code
+If you need to log in later, open Terminal and run:
 
-The script can install Claude Code but can't log you in. Once it's done, run:
-
-```
+```sh
 claude
 ```
 
-and follow the prompt to log in with your Anthropic account. Check it worked with:
+## 3. Open the vault in Obsidian
 
-```
-claude --version
-```
+1. Launch **Obsidian** from your Applications folder — your wiki will already be in the vault list.
+2. Click on it to open it.
+3. When Obsidian shows a notice asking if you trust the vault, click **Trust author and enable plugins** — the Claudian plugin won't load without this.
 
-If that prints a version number, you're set.
+## 4. Clip web pages to your wiki
 
-## 3. Install Obsidian
+Install the **[Obsidian Web Clipper](https://obsidian.md/clipper)** browser extension. After installing:
 
-The setup script should have already opened [obsidian.md](https://obsidian.md) in your browser. Download and install it like any other Mac app, then open it.
+1. Open the extension and go to its **Settings**.
+2. Choose this vault.
+3. Set the **save location** to `_inbox`.
 
-When Obsidian asks you to open a vault, choose **Open folder as vault** and select this folder.
+Anything you clip will land in `_inbox` as markdown. Open the Claudian panel and ask Claude to file it — that's the normal ingest workflow.
 
-## 4. Turn on the Claudian plugin
+## 5. Make this wiki yours
 
-In Obsidian, go to **Settings → Community plugins** and turn on **Claudian**. It's already included in this folder — it's how Claude Code works inside your vault.
-
-## 5. Make this vault your own
-
-Open the Claudian panel from Obsidian's sidebar and tell Claude what you want this wiki to cover — whose life or work it's for, and what's out of scope. Claude will fill in the **Scope** line under "What this is" in `CLAUDE.md` for you.
+Open the Claudian panel from Obsidian's left sidebar and tell Claude what you want this wiki to cover — whose life or work it's for, and what's out of scope. Claude will fill in the scope section of `CLAUDE.md` for you.
 
 ## 6. Try it out
 
-Drop any file (a PDF, an article, a note) into the `_inbox` folder and ask Claude, in the Claudian panel, to file it — that's the wiki's normal way of taking in new material.
+Drop any file (a PDF, an article, a photo, a note) into the `_inbox` folder — there's a shortcut to it in your Dock — and ask Claude in the Claudian panel to file it. That's the wiki's normal way of taking in new material.
 
 ## If something goes wrong
 
-- **"command not found" in Terminal** — close and reopen the Terminal window after an install finishes, then run `bash setup.sh` again. New tools sometimes don't show up until you start a fresh Terminal session.
-- **Claudian doesn't see Claude Code** — run `claude --version` in Terminal first to confirm Claude Code works on its own. If that fails, re-run `bash setup.sh`.
+- **macOS blocks the script** — right-click `Setup.command`, choose Open, then Open again.
+- **"command not found" after an install** — close and reopen Terminal, then run `bash setup.sh` again. New tools sometimes don't appear until you start a fresh session.
+- **Claudian doesn't load** — you may have dismissed the trust dialog; go to **Settings → Community plugins** and enable Claudian from there.
+- **Claudian doesn't see Claude Code** — run `claude --version` in Terminal. If that fails, re-run `bash setup.sh`.
 
 ## Keeping a history and backing up
 
-This folder uses git, a version control tool, to keep a history of every change. That means you can always undo a mistake or look back at an earlier version of your wiki. You can also create a repository on GitHub and back this folder up there — just ask Claude for help setting that up if you'd like.
+This folder uses git to keep a history of every change, so you can undo mistakes or look back at earlier versions. To back it up to GitHub, just ask Claude — it can walk you through the setup.
 
 ## Going deeper
 
-Once the basics are working, `wiki/3-Resources/Meta/llm-wiki.md`, `llm-wiki-v2.md`, and `llm-wiki-v3.md` explain the thinking behind how this wiki is organized — worth reading before you change how `CLAUDE.md` directs Claude's behavior.
+Once the basics are working, `wiki/3-Resources/Meta/llm-wiki.md` (and `llm-wiki-v2.md`, `llm-wiki-v3.md`) explain the thinking behind how this wiki is organized — worth reading before changing how `CLAUDE.md` directs Claude's behaviour.

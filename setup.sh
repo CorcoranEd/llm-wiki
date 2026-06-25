@@ -1,180 +1,257 @@
 #!/bin/bash
-# Sets up the tools this vault needs: Homebrew, Node.js, the Claude Code CLI, and uv.
-# Run it with: bash setup.sh
+# Sets up everything this wiki needs: Homebrew, Node.js, Claude Code CLI, uv, and Obsidian.
+# Double-click Setup.command to run, or from Terminal: bash setup.sh
 set -u
+
+# ─── Always run from the script's own directory ──────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || { echo "Couldn't find the script's directory. Aborting."; exit 1; }
+
+# ─── Bring installed-but-not-yet-sourced tools onto PATH ─────────────────────
+# Homebrew (Apple Silicon: /opt/homebrew; Intel: /usr/local)
+if [ -x "/opt/homebrew/bin/brew" ]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -x "/usr/local/bin/brew" ]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+# uv installs its binary here
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+# npm global bin (only query if npm is already available)
+if command -v npm >/dev/null 2>&1; then
+  _NPM_PREFIX="$(npm config get prefix 2>/dev/null)"
+  [ -n "$_NPM_PREFIX" ] && export PATH="$_NPM_PREFIX/bin:$PATH"
+fi
 
 have() {
   command -v "$1" >/dev/null 2>&1
 }
 
-confirm() {
-  local prompt="$1 [Y/n] "
-  local answer
-  read -r -p "$prompt" answer
-  case "$answer" in
-    [nN]|[nN][oO]) return 1 ;;
-    *) return 0 ;;
-  esac
-}
-
-echo "This will check for the tools this vault needs, and offer to install anything missing."
-echo "Just press Enter to accept the default (yes) at each prompt."
+echo
+echo "Setting up your wiki — this may take a few minutes."
 echo
 
-# 0. Move this vault into ~/Sites to keep things tidy
+# ─── 0. Name and move to ~/Sites ─────────────────────────────────────────────
 SITES_DIR="$HOME/Sites"
-CURRENT_DIR="$(pwd)"
+CURRENT_DIR="$SCRIPT_DIR"
 CURRENT_NAME="$(basename "$CURRENT_DIR")"
+# Strip trailing -main (GitHub zip artifact) to suggest a cleaner name
+SUGGESTED="${CURRENT_NAME%-main}"
+TARGET_DIR="$CURRENT_DIR"
 
 if [ "$(dirname "$CURRENT_DIR")" != "$SITES_DIR" ]; then
-  echo "This vault currently lives at $CURRENT_DIR."
-  if confirm "Move it to $SITES_DIR now?"; then
-    read -r -p "What do you want to call this wiki's folder? [$CURRENT_NAME] " NEW_NAME
-    NEW_NAME="${NEW_NAME:-$CURRENT_NAME}"
-    TARGET_DIR="$SITES_DIR/$NEW_NAME"
-    if [ -e "$TARGET_DIR" ]; then
-      echo "$TARGET_DIR already exists — leaving this copy where it is."
-    else
-      mkdir -p "$SITES_DIR"
-      mv "$CURRENT_DIR" "$TARGET_DIR"
-      cd "$TARGET_DIR" || { echo "Couldn't move into $TARGET_DIR. Aborting."; exit 1; }
-      echo "✓ Moved to $TARGET_DIR"
-    fi
+  read -r -p "What do you want to call this wiki's folder? [$SUGGESTED] " NEW_NAME
+  NEW_NAME="${NEW_NAME:-$SUGGESTED}"
+  PROPOSED_DIR="$SITES_DIR/$NEW_NAME"
+  if [ -e "$PROPOSED_DIR" ]; then
+    echo "$PROPOSED_DIR already exists — leaving this copy where it is."
   else
-    echo "Skipping move — staying in $CURRENT_DIR."
+    mkdir -p "$SITES_DIR"
+    mv "$CURRENT_DIR" "$PROPOSED_DIR"
+    cd "$PROPOSED_DIR" || { echo "Couldn't move into $PROPOSED_DIR. Aborting."; exit 1; }
+    TARGET_DIR="$PROPOSED_DIR"
+    echo "✓ Moved to $TARGET_DIR"
   fi
   echo
 fi
 
-# 1. Homebrew
+# ─── 1. Homebrew ─────────────────────────────────────────────────────────────
 if have brew; then
-  echo "✓ Homebrew is already installed."
+  echo "✓ Homebrew already installed."
 else
-  echo
-  echo "Homebrew is the standard way to install developer tools on a Mac."
-  if confirm "Install Homebrew now?"; then
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    if have brew; then
-      echo "✓ Homebrew installed."
-    else
-      echo "Homebrew installed something, but the 'brew' command isn't on your PATH yet."
-      echo "It likely printed a couple of lines for you to run — copy/paste those into this Terminal, then re-run: bash setup.sh"
-      exit 1
-    fi
+  echo "Installing Homebrew (Mac's standard developer tool installer)..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  # Source into the current shell immediately after install
+  if [ -x "/opt/homebrew/bin/brew" ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [ -x "/usr/local/bin/brew" ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+  if have brew; then
+    echo "✓ Homebrew installed."
   else
-    echo "Skipping Homebrew means Node.js, and therefore Claude Code, can't be installed by this script."
+    echo "Homebrew installation didn't finish. Open a new Terminal window and re-run: bash setup.sh"
+    exit 1
   fi
 fi
 
-# 2. Node.js (needed to install the Claude Code CLI via npm)
+# ─── 2. Node.js ──────────────────────────────────────────────────────────────
 if have node; then
-  echo "✓ Node.js is already installed."
+  echo "✓ Node.js already installed."
 elif have brew; then
-  echo
-  echo "Node.js is needed to install the Claude Code CLI."
-  if confirm "Install Node.js now?"; then
-    brew install node
-    if have node; then
-      echo "✓ Node.js installed."
-    else
-      echo "Node.js install didn't finish correctly. Try running 'brew install node' yourself, then re-run: bash setup.sh"
-    fi
+  echo "Installing Node.js..."
+  brew install node
+  if have node; then
+    echo "✓ Node.js installed."
   else
-    echo "Skipping Node.js means Claude Code can't be installed by this script."
+    echo "Node.js installation failed. Try running 'brew install node' manually, then re-run: bash setup.sh"
+    exit 1
   fi
 else
-  echo "Skipping Node.js — Homebrew isn't installed."
+  echo "Skipping Node.js — Homebrew isn't available."
 fi
 
-# 3. Claude Code CLI
+# ─── 3. Claude Code CLI ──────────────────────────────────────────────────────
 if have claude; then
-  echo "✓ Claude Code is already installed."
+  echo "✓ Claude Code already installed."
 elif have node; then
-  echo
-  echo "Claude Code is the AI that does the filing and organizing in this wiki."
-  if confirm "Install Claude Code now?"; then
-    npm install -g @anthropic-ai/claude-code
-    if have claude; then
-      echo "✓ Claude Code installed. Run 'claude' and log in with your Anthropic account when you're ready."
-    else
-      echo "Claude Code install didn't finish correctly. Try running 'npm install -g @anthropic-ai/claude-code' yourself, then re-run: bash setup.sh"
-    fi
+  echo "Installing Claude Code..."
+  npm install -g @anthropic-ai/claude-code
+  # Refresh npm global bin on PATH after install
+  _NPM_PREFIX="$(npm config get prefix 2>/dev/null)"
+  [ -n "$_NPM_PREFIX" ] && export PATH="$_NPM_PREFIX/bin:$PATH"
+  if have claude; then
+    echo "✓ Claude Code installed."
   else
-    echo "Skipping Claude Code — you can install it later by running this script again."
+    echo "Claude Code installation failed. Try running 'npm install -g @anthropic-ai/claude-code' manually."
+    exit 1
   fi
 else
   echo "Skipping Claude Code — Node.js isn't installed."
 fi
 
-# 4. uv (Python tool, used by markitdown to convert PDFs/docs during ingest)
+# ─── 4. uv ───────────────────────────────────────────────────────────────────
 if have uv; then
-  echo "✓ uv is already installed."
+  echo "✓ uv already installed."
 else
-  echo
-  echo "uv is a small tool Claude Code uses to convert PDFs and other documents to text."
-  if confirm "Install uv now?"; then
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    if have uv; then
-      echo "✓ uv installed."
-    else
-      echo "uv installed but isn't on your PATH yet in this Terminal session. Close and reopen Terminal, then re-run: bash setup.sh"
-    fi
+  echo "Installing uv (document conversion helper)..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+  if have uv; then
+    echo "✓ uv installed."
   else
-    echo "Skipping uv means the document-conversion tooling won't be set up."
+    echo "uv installed but isn't on PATH yet — open a new Terminal window and re-run: bash setup.sh"
+    exit 1
   fi
 fi
 
-# 5. Python tooling for this vault
-if have uv; then
-  echo
-  echo "Setting up this vault's Python tooling..."
-  uv sync
-  echo "✓ Python tooling ready."
+# ─── 5. Python tooling for document conversion ───────────────────────────────
+echo "Setting up document conversion tooling..."
+(cd "$TARGET_DIR" && uv sync --quiet)
+echo "✓ Document tooling ready."
+
+# ─── 6. Obsidian ─────────────────────────────────────────────────────────────
+if [ -d "/Applications/Obsidian.app" ]; then
+  echo "✓ Obsidian already installed."
+else
+  echo "Downloading and installing Obsidian..."
+  ARCH="$(uname -m)"
+  if [ "$ARCH" = "arm64" ]; then
+    DMG_URL=$(curl -s https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest \
+      | grep '"browser_download_url"' | grep 'arm64\.dmg' \
+      | sed 's/.*"browser_download_url": "\([^"]*\)".*/\1/' | head -1)
+  else
+    DMG_URL=$(curl -s https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest \
+      | grep '"browser_download_url"' | grep '\.dmg' | grep -v 'arm64' \
+      | sed 's/.*"browser_download_url": "\([^"]*\)".*/\1/' | head -1)
+  fi
+  if [ -z "$DMG_URL" ]; then
+    echo "Couldn't fetch the Obsidian download URL. Install it manually from https://obsidian.md"
+  else
+    TMPFILE="$(mktemp /tmp/obsidian-XXXXXX.dmg)"
+    curl -L -# -o "$TMPFILE" "$DMG_URL"
+    hdiutil attach "$TMPFILE" -nobrowse 2>/dev/null
+    APP_PATH="$(find /Volumes -maxdepth 2 -name "Obsidian.app" -type d 2>/dev/null | head -1)"
+    if [ -n "$APP_PATH" ]; then
+      VOLUME_PATH="$(dirname "$APP_PATH")"
+      cp -R "$APP_PATH" /Applications/
+      hdiutil detach "$VOLUME_PATH" -quiet 2>/dev/null || true
+      echo "✓ Obsidian installed."
+    else
+      echo "Couldn't install Obsidian automatically. Install it manually from https://obsidian.md"
+    fi
+    rm -f "$TMPFILE"
+  fi
 fi
 
-# 6. Initialize local git repository for this copy
+# ─── 7. Register vault in Obsidian ───────────────────────────────────────────
+OBSIDIAN_CONFIG="$HOME/Library/Application Support/obsidian/obsidian.json"
+if [ -d "/Applications/Obsidian.app" ]; then
+  python3 - "$TARGET_DIR" "$OBSIDIAN_CONFIG" <<'PYEOF'
+import json, os, sys, time, random
+
+vault_path = sys.argv[1]
+config_path = sys.argv[2]
+
+if os.path.exists(config_path):
+    with open(config_path) as f:
+        config = json.load(f)
+else:
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    config = {}
+
+config.setdefault("vaults", {})
+
+# Skip if already registered
+if any(v.get("path") == vault_path for v in config["vaults"].values()):
+    print("already registered")
+    sys.exit(0)
+
+vault_id = "%016x" % random.getrandbits(64)
+config["vaults"][vault_id] = {"path": vault_path, "ts": int(time.time() * 1000)}
+
+with open(config_path, "w") as f:
+    json.dump(config, f, indent=2)
+print("registered")
+PYEOF
+  echo "✓ Vault registered in Obsidian."
+fi
+
+# ─── 8. git ─────────────────────────────────────────────────────────────────
 if ! have git && have brew; then
-  echo
-  echo "git is needed for local version control of this vault. It usually comes with the Mac, but yours doesn't have it."
-  if confirm "Install git now?"; then
-    brew install git
-    if have git; then
-      echo "✓ git installed."
-    else
-      echo "git install didn't finish correctly. Try running 'brew install git' yourself, then re-run: bash setup.sh"
-    fi
-  else
-    echo "Skipping git — local version control won't be set up."
-  fi
+  echo "Installing git..."
+  brew install git
 fi
 
 if have git; then
-  if [ ! -d .git ]; then
-    echo
-    echo "Initializing a local git repository for this copy of the vault..."
-    git init
-    if git config --get user.name >/dev/null 2>&1 && git config --get user.email >/dev/null 2>&1; then
-      git add -A
-      git commit -m 'chore: initial local repository setup' >/dev/null 2>&1 || true
-      echo "✓ Local git repository initialized."
-    else
-      echo "✓ Local git repository initialized."
-      echo "  Note: configure git user.name and user.email to make commits:"
-      echo "    git config --global user.name \"Your Name\""
-      echo "    git config --global user.email \"you@example.com\""
-    fi
+  if [ ! -d "$TARGET_DIR/.git" ]; then
+    echo "Initializing local git repository..."
+    (cd "$TARGET_DIR" && git init -q && git add -A && \
+      git commit -q -m 'chore: initial local repository setup' 2>/dev/null || true)
+    echo "✓ Git repository initialized."
   else
-    echo
-    echo "✓ This folder is already a git repository."
+    echo "✓ Git repository already set up."
   fi
-else
-  echo
-  echo "Note: git is not installed or not available in PATH. If you want local version control, install Homebrew and re-run this script, or install git yourself."
 fi
 
+# ─── 9. Finder sidebar + Dock shortcut ───────────────────────────────────────
+sfltool add-bookmark "file://$TARGET_DIR" 2>/dev/null || true
+INBOX_DIR="$TARGET_DIR/_inbox"
+defaults write com.apple.dock persistent-others -array-add \
+  "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>$INBOX_DIR</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>tile-type</key><string>directory-tile</string></dict>" \
+  2>/dev/null || true
+killall Dock 2>/dev/null || true
+echo "✓ Wiki folder added to Finder sidebar; _inbox added to Dock."
+
+# ─── Done — next steps and auth ──────────────────────────────────────────────
 echo
-echo "Terminal setup done. Next steps:"
-echo "  1. If you just installed Claude Code, run 'claude' and log in."
-echo "  2. Install Obsidian — opening the download page for you now."
-echo "  3. See README.md for the remaining steps (opening this folder as a vault, enabling plugins)."
-open "https://obsidian.md" >/dev/null 2>&1 || true
+echo "════════════════════════════════════════════════════════"
+echo "  Installation complete!"
+echo "════════════════════════════════════════════════════════"
+echo
+echo "  OPEN OBSIDIAN"
+echo "    1. Launch Obsidian from Applications"
+echo "    2. Choose 'Open folder as vault'"
+echo "    3. Select: $TARGET_DIR"
+echo "    4. When asked to trust the vault, click:"
+echo "       'Trust author and enable plugins'"
+echo "       (Claudian won't work without this)"
+echo
+echo "  WEB CLIPPER (save web pages to your wiki)"
+echo "    Install the browser extension: https://obsidian.md/clipper"
+echo "    In its settings, choose this vault and set the"
+echo "    save location to:  _inbox"
+echo
+echo "════════════════════════════════════════════════════════"
+echo "  ⚠  LOG IN TO CLAUDE CODE (required)"
+echo "════════════════════════════════════════════════════════"
+echo
+echo "  The wiki won't work until you're logged in."
+echo "  Starting Claude Code now — follow the prompts to"
+echo "  create or sign in to your Anthropic account."
+echo
+if have claude; then
+  claude
+else
+  echo "  Claude Code isn't on PATH right now."
+  echo "  Open a new Terminal window and run:  claude"
+fi
