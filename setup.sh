@@ -34,8 +34,7 @@ echo
 SITES_DIR="$HOME/Sites"
 CURRENT_DIR="$SCRIPT_DIR"
 CURRENT_NAME="$(basename "$CURRENT_DIR")"
-# Strip trailing -main (GitHub zip artifact) to suggest a cleaner name
-SUGGESTED="${CURRENT_NAME%-main}"
+SUGGESTED="llm-wiki"
 TARGET_DIR="$CURRENT_DIR"
 
 if [ "$(dirname "$CURRENT_DIR")" != "$SITES_DIR" ]; then
