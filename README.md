@@ -2,8 +2,6 @@
 
 This folder is a starter kit for a personal wiki that an AI helps you maintain. You drop in articles, PDFs, notes, whatever — and it gets filed, cross-referenced, and kept tidy for you. This guide assumes you've never used a terminal or installed developer tools before.
 
-> **Downloaded from GitHub?** If the folder is named `llm-wiki-main`, that's normal — the setup script will offer to rename it.
-
 ## What you're installing and why
 
 - **[Obsidian](https://obsidian.md)** — the app you'll use to read and write notes.
@@ -13,13 +11,15 @@ This folder is a starter kit for a personal wiki that an AI helps you maintain. 
 
 ## 1. Run the setup script
 
-**Double-click `Setup.command`** in this folder. macOS will open a Terminal window and run the setup automatically.
+Open **Terminal** (press `Cmd+Space`, type "Terminal", hit Enter) and paste this one command:
 
-> If macOS says it can't open the file because it's from an unidentified developer: right-click `Setup.command`, choose **Open**, then click **Open** again in the dialog.
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/CorcoranEd/llm-wiki/main/setup.sh)"
+```
 
-The script asks one question — what to name your wiki folder — then handles everything else: moving it to `~/Sites`, installing all the tools, downloading Obsidian, and adding a shortcut to your Dock. It only installs what's missing, so it's safe to run again if something goes wrong.
+That's it — no download needed first. The script fetches everything itself, asks what to name your wiki folder, and handles the rest: installing all the tools, downloading Obsidian, and adding a shortcut to your Dock. It only installs what's missing, so it's safe to run again if something goes wrong.
 
-**Prefer the terminal?** Open Terminal (`Cmd+Space`, type "Terminal", Enter), `cd` into this folder, and run `bash setup.sh`.
+**Already downloaded this folder?** You can also double-click `Setup.command` or run `bash setup.sh` from inside the folder in Terminal.
 
 ## 2. Log in to Claude Code
 

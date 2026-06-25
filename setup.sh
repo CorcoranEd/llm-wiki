@@ -1,11 +1,25 @@
 #!/bin/bash
-# Sets up everything this wiki needs: Homebrew, Node.js, Claude Code CLI, uv, and Obsidian.
-# Double-click Setup.command to run, or from Terminal: bash setup.sh
+# One-liner install (no download needed):
+#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/CorcoranEd/llm-wiki/main/setup.sh)"
+# Or from a downloaded copy: bash setup.sh  /  double-click Setup.command
 set -u
 
-# ─── Always run from the script's own directory ──────────────────────────────
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR" || { echo "Couldn't find the script's directory. Aborting."; exit 1; }
+# ─── Locate the vault (or download it if running via curl) ───────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-./}")" 2>/dev/null && pwd)"
+
+if [ ! -f "$SCRIPT_DIR/CLAUDE.md" ] || [ ! -d "$SCRIPT_DIR/_inbox" ]; then
+  echo "Downloading llm-wiki vault from GitHub..."
+  _TMPZIP="$(mktemp /tmp/llm-wiki-XXXXXX.zip)"
+  _TMPDIR="$(mktemp -d /tmp/llm-wiki-XXXXXX)"
+  curl -fsSL https://github.com/CorcoranEd/llm-wiki/archive/refs/heads/main.zip -o "$_TMPZIP"
+  unzip -q "$_TMPZIP" -d "$_TMPDIR"
+  rm -f "$_TMPZIP"
+  SCRIPT_DIR="$_TMPDIR/llm-wiki-main"
+  echo "✓ Vault downloaded."
+  echo
+fi
+
+cd "$SCRIPT_DIR" || { echo "Couldn't find the vault directory. Aborting."; exit 1; }
 
 # ─── Bring installed-but-not-yet-sourced tools onto PATH ─────────────────────
 # Homebrew (Apple Silicon: /opt/homebrew; Intel: /usr/local)
