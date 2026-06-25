@@ -2,22 +2,63 @@
 # One-liner install (no download needed):
 #   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/CorcoranEd/llm-wiki/main/setup.sh)"
 # Or from a downloaded copy: bash setup.sh  /  double-click Setup.command
+#
+# Flags (downloaded copy):  bash setup.sh --dry-run --verbose
+# Flags (via curl):         /bin/bash -c "$(curl -fsSL .../setup.sh)" -- --dry-run --verbose
+#   -n, --dry-run   Don't install/move/write anything — print what each step would do.
+#   -v, --verbose   Print extra diagnostic detail (paths, detected values, command results).
+#   -h, --help      Show this help and exit.
 set -u
+
+DRY_RUN=0
+VERBOSE=0
+for arg in "$@"; do
+  case "$arg" in
+    -n|--dry-run) DRY_RUN=1 ;;
+    -v|--verbose) VERBOSE=1 ;;
+    -h|--help)
+      sed -n '2,10p' "${BASH_SOURCE[0]:-$0}"
+      exit 0
+      ;;
+    *)
+      echo "Unknown flag: $arg (use --help for usage)"
+      exit 1
+      ;;
+  esac
+done
+
+log_verbose() { [ "$VERBOSE" = 1 ] && echo "  [verbose] $*"; }
+dry() { [ "$DRY_RUN" = 1 ] && echo "  [dry-run] $*"; }
+
+if [ "$DRY_RUN" = 1 ]; then
+  echo "Running in --dry-run mode: no files will be moved/written, nothing will be installed."
+  echo
+fi
 
 # ─── Locate the vault (or download it if running via curl) ───────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-./}")" 2>/dev/null && pwd)"
 
 if [ ! -f "$SCRIPT_DIR/CLAUDE.md" ] || [ ! -d "$SCRIPT_DIR/_inbox" ]; then
   # Running via curl — ask for a name and download directly to ~/Sites
-  _SITES_DIR="$HOME/Sites"
+  if [ "$DRY_RUN" = 1 ]; then
+    _SITES_DIR="$HOME/Downloads"
+    _CURL_NAME="llm-wiki-dry-run-test"
+    dry "would prompt for a folder name and download the repo into ~/Sites — testing the download/unzip pipeline into $_SITES_DIR/$_CURL_NAME instead"
+  else
+    _SITES_DIR="$HOME/Sites"
+    read -r -p "What do you want to call this wiki's folder? [llm-wiki] " _CURL_NAME
+    _CURL_NAME="${_CURL_NAME:-llm-wiki}"
+  fi
   mkdir -p "$_SITES_DIR"
-  read -r -p "What do you want to call this wiki's folder? [llm-wiki] " _CURL_NAME
-  _CURL_NAME="${_CURL_NAME:-llm-wiki}"
   _DEST="$_SITES_DIR/$_CURL_NAME"
   if [ -e "$_DEST" ]; then
-    echo "A folder named $_CURL_NAME already exists in ~/Sites."
-    echo "Remove it or choose a different name, then re-run."
-    exit 1
+    if [ "$DRY_RUN" = 1 ]; then
+      rm -rf "$_DEST"
+    else
+      echo "A folder named $_CURL_NAME already exists in ~/Sites."
+      echo "Remove it or choose a different name, then re-run."
+      exit 1
+    fi
   fi
   echo "Downloading to $_DEST..."
   _TMPZIP="$(mktemp /tmp/llm-wiki-XXXXXX.zip)"
@@ -28,7 +69,15 @@ if [ ! -f "$SCRIPT_DIR/CLAUDE.md" ] || [ ! -d "$SCRIPT_DIR/_inbox" ]; then
   mv "$_TMPDIR/llm-wiki-main" "$_DEST"
   rm -rf "$_TMPDIR"
   SCRIPT_DIR="$_DEST"
-  echo "✓ Downloaded to $_DEST"
+  if [ "$DRY_RUN" = 1 ]; then
+    if [ -f "$SCRIPT_DIR/CLAUDE.md" ] && [ -d "$SCRIPT_DIR/_inbox" ]; then
+      echo "✓ [dry-run] Downloaded and unzipped repo to $_DEST — pipeline works. Continuing the dry run against this test copy. (Left there for inspection — delete manually when done.)"
+    else
+      echo "✗ [dry-run] Downloaded to $_DEST but it doesn't look like a valid vault — check it manually."
+    fi
+  else
+    echo "✓ Downloaded to $_DEST"
+  fi
   echo
 fi
 
@@ -68,8 +117,11 @@ if [ "$(dirname "$CURRENT_DIR")" != "$SITES_DIR" ]; then
   read -r -p "What do you want to call this wiki's folder? [$SUGGESTED] " NEW_NAME
   NEW_NAME="${NEW_NAME:-$SUGGESTED}"
   PROPOSED_DIR="$SITES_DIR/$NEW_NAME"
+  log_verbose "current dir: $CURRENT_DIR, proposed target: $PROPOSED_DIR"
   if [ -e "$PROPOSED_DIR" ]; then
     echo "$PROPOSED_DIR already exists — leaving this copy where it is."
+  elif [ "$DRY_RUN" = 1 ]; then
+    dry "would mkdir -p $SITES_DIR and move $CURRENT_DIR -> $PROPOSED_DIR"
   else
     mkdir -p "$SITES_DIR"
     mv "$CURRENT_DIR" "$PROPOSED_DIR"
@@ -81,8 +133,11 @@ if [ "$(dirname "$CURRENT_DIR")" != "$SITES_DIR" ]; then
 fi
 
 # ─── 1. Homebrew ─────────────────────────────────────────────────────────────
+log_verbose "command -v brew: $(command -v brew 2>/dev/null || echo not found)"
 if have brew; then
   echo "✓ Homebrew already installed."
+elif [ "$DRY_RUN" = 1 ]; then
+  dry "would install Homebrew"
 else
   echo "Installing Homebrew (Mac's standard developer tool installer)..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -101,8 +156,11 @@ else
 fi
 
 # ─── 2. Node.js ──────────────────────────────────────────────────────────────
+log_verbose "command -v node: $(command -v node 2>/dev/null || echo not found)"
 if have node; then
   echo "✓ Node.js already installed."
+elif [ "$DRY_RUN" = 1 ]; then
+  dry "would install Node.js"
 elif have brew; then
   echo "Installing Node.js..."
   brew install node
@@ -117,8 +175,11 @@ else
 fi
 
 # ─── 3. Claude Code CLI ──────────────────────────────────────────────────────
+log_verbose "command -v claude: $(command -v claude 2>/dev/null || echo not found)"
 if have claude; then
   echo "✓ Claude Code already installed."
+elif [ "$DRY_RUN" = 1 ]; then
+  dry "would install Claude Code CLI"
 elif have node; then
   echo "Installing Claude Code..."
   npm install -g @anthropic-ai/claude-code
@@ -136,8 +197,11 @@ else
 fi
 
 # ─── 4. uv ───────────────────────────────────────────────────────────────────
+log_verbose "command -v uv: $(command -v uv 2>/dev/null || echo not found)"
 if have uv; then
   echo "✓ uv already installed."
+elif [ "$DRY_RUN" = 1 ]; then
+  dry "would install uv"
 else
   echo "Installing uv (document conversion helper)..."
   curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -150,26 +214,60 @@ else
   fi
 fi
 
+# ─── 4.5. jq (needed to safely register the vault in Obsidian's config) ──────
+log_verbose "command -v jq: $(command -v jq 2>/dev/null || echo not found)"
+if have jq; then
+  echo "✓ jq already installed."
+elif [ "$DRY_RUN" = 1 ]; then
+  dry "would install jq"
+elif have brew; then
+  echo "Installing jq..."
+  brew install jq
+  if have jq; then
+    echo "✓ jq installed."
+  else
+    echo "jq installation failed. Vault won't be auto-registered in Obsidian — add it manually after install."
+  fi
+else
+  echo "Skipping jq — Homebrew isn't available. Vault won't be auto-registered in Obsidian."
+fi
+
 # ─── 5. Python tooling for document conversion ───────────────────────────────
 echo "Setting up document conversion tooling..."
-(cd "$TARGET_DIR" && uv sync --quiet)
-echo "✓ Document tooling ready."
+if [ "$DRY_RUN" = 1 ]; then
+  dry "would run: uv sync --quiet in $TARGET_DIR"
+else
+  (cd "$TARGET_DIR" && uv sync --quiet)
+  echo "✓ Document tooling ready."
+fi
 
 # ─── 6. Obsidian ─────────────────────────────────────────────────────────────
-if [ -d "/Applications/Obsidian.app" ]; then
+if [ -d "/Applications/Obsidian.app" ] && [ "$DRY_RUN" != 1 ]; then
   echo "✓ Obsidian already installed."
 else
-  echo "Downloading and installing Obsidian..."
+  if [ "$DRY_RUN" = 1 ]; then
+    DEST_DIR="$HOME/Downloads"
+    dry "downloading/mounting Obsidian for real, copying to $DEST_DIR instead of /Applications (to verify the pipeline without touching your real install)"
+  else
+    DEST_DIR="/Applications"
+    echo "Downloading and installing Obsidian..."
+  fi
   ARCH="$(uname -m)"
+  log_verbose "ARCH: $ARCH"
+  RELEASE_JSON="$(curl -s https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest)"
   if [ "$ARCH" = "arm64" ]; then
-    DMG_URL=$(curl -s https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest \
-      | grep '"browser_download_url"' | grep 'arm64\.dmg' \
+    DMG_URL=$(echo "$RELEASE_JSON" | grep '"browser_download_url"' | grep 'arm64\.dmg' \
       | sed 's/.*"browser_download_url": "\([^"]*\)".*/\1/' | head -1)
   else
-    DMG_URL=$(curl -s https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest \
-      | grep '"browser_download_url"' | grep '\.dmg' | grep -v 'arm64' \
+    DMG_URL=$(echo "$RELEASE_JSON" | grep '"browser_download_url"' | grep '\.dmg"' | grep -v 'arm64' \
       | sed 's/.*"browser_download_url": "\([^"]*\)".*/\1/' | head -1)
   fi
+  if [ -z "$DMG_URL" ]; then
+    # Obsidian currently ships a single universal .dmg (no arch split) — fall back to it.
+    DMG_URL=$(echo "$RELEASE_JSON" | grep '"browser_download_url"' | grep '\.dmg"' \
+      | sed 's/.*"browser_download_url": "\([^"]*\)".*/\1/' | head -1)
+  fi
+  log_verbose "DMG_URL: $DMG_URL"
   if [ -z "$DMG_URL" ]; then
     echo "Couldn't fetch the Obsidian download URL. Install it manually from https://obsidian.md"
   else
@@ -179,9 +277,17 @@ else
     APP_PATH="$(find /Volumes -maxdepth 2 -name "Obsidian.app" -type d 2>/dev/null | head -1)"
     if [ -n "$APP_PATH" ]; then
       VOLUME_PATH="$(dirname "$APP_PATH")"
-      cp -R "$APP_PATH" /Applications/
+      cp -R "$APP_PATH" "$DEST_DIR/"
       hdiutil detach "$VOLUME_PATH" -quiet 2>/dev/null || true
-      echo "✓ Obsidian installed."
+      if [ -f "$DEST_DIR/Obsidian.app/Contents/Info.plist" ]; then
+        if [ "$DRY_RUN" = 1 ]; then
+          echo "✓ [dry-run] Downloaded, mounted, and copied Obsidian.app to $DEST_DIR — pipeline works. (Left there for inspection — delete manually when done.)"
+        else
+          echo "✓ Obsidian installed."
+        fi
+      else
+        echo "Copied Obsidian.app to $DEST_DIR but couldn't verify it — check it manually."
+      fi
     else
       echo "Couldn't install Obsidian automatically. Install it manually from https://obsidian.md"
     fi
@@ -191,62 +297,106 @@ fi
 
 # ─── 7. Register vault in Obsidian ───────────────────────────────────────────
 OBSIDIAN_CONFIG="$HOME/Library/Application Support/obsidian/obsidian.json"
+log_verbose "Obsidian config path: $OBSIDIAN_CONFIG"
+log_verbose "Vault path to register: $TARGET_DIR"
+
+# Adds $TARGET_DIR to a vaults config at path $1, in place. Prints ✓/✗ with $2 as a label.
+# Returns non-zero if jq is missing or the write failed.
+register_vault_in_config() {
+  local config_path="$1" label="$2"
+  if jq -e --arg p "$TARGET_DIR" 'any(.vaults[]?; .path == $p)' "$config_path" >/dev/null 2>&1; then
+    log_verbose "$label: vault already present"
+    echo "✓ ($label) vault already registered."
+    return 0
+  fi
+  local vault_id ts
+  vault_id="$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')"
+  ts="$(($(date +%s) * 1000))"
+  if jq --arg id "$vault_id" --arg path "$TARGET_DIR" --argjson ts "$ts" \
+      '.vaults[$id] = {path: $path, ts: $ts}' "$config_path" > "$config_path.tmp" \
+      && mv "$config_path.tmp" "$config_path"; then
+    if jq -e --arg p "$TARGET_DIR" 'any(.vaults[]?; .path == $p)' "$config_path" >/dev/null 2>&1; then
+      echo "✓ ($label) vault registered and verified in $config_path."
+      return 0
+    fi
+    echo "✗ ($label) jq ran but the vault wasn't found afterward — check $config_path"
+    return 1
+  fi
+  rm -f "$config_path.tmp"
+  echo "✗ ($label) jq/write failed — check $config_path"
+  return 1
+}
+
 if [ -d "/Applications/Obsidian.app" ]; then
-  python3 - "$TARGET_DIR" "$OBSIDIAN_CONFIG" <<'PYEOF'
-import json, os, sys, time, random
-
-vault_path = sys.argv[1]
-config_path = sys.argv[2]
-
-if os.path.exists(config_path):
-    with open(config_path) as f:
-        config = json.load(f)
-else:
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    config = {}
-
-config.setdefault("vaults", {})
-
-# Skip if already registered
-if any(v.get("path") == vault_path for v in config["vaults"].values()):
-    print("already registered")
-    sys.exit(0)
-
-vault_id = "%016x" % random.getrandbits(64)
-config["vaults"][vault_id] = {"path": vault_path, "ts": int(time.time() * 1000)}
-
-with open(config_path, "w") as f:
-    json.dump(config, f, indent=2)
-print("registered")
-PYEOF
-  echo "✓ Vault registered in Obsidian."
+  if [ "$DRY_RUN" = 1 ]; then
+    if ! have jq; then
+      dry "would register vault $TARGET_DIR in $OBSIDIAN_CONFIG, but jq isn't installed to test with"
+    else
+      dry "testing the jq registration logic against copies in $HOME/Downloads — not touching $OBSIDIAN_CONFIG"
+      if [ -f "$OBSIDIAN_CONFIG" ]; then
+        EXISTING_TEST="$HOME/Downloads/obsidian-dry-run-existing.json"
+        cp "$OBSIDIAN_CONFIG" "$EXISTING_TEST"
+        register_vault_in_config "$EXISTING_TEST" "existing config copy"
+        log_verbose "existing-config test file: $EXISTING_TEST"
+      else
+        echo "  [dry-run] no existing obsidian.json to copy — skipping that case"
+      fi
+      FRESH_TEST="$HOME/Downloads/obsidian-dry-run-fresh.json"
+      echo '{}' > "$FRESH_TEST"
+      register_vault_in_config "$FRESH_TEST" "fresh config"
+      log_verbose "fresh-config test file: $FRESH_TEST"
+      echo "  [dry-run] test files left in $HOME/Downloads for inspection — delete manually when done."
+    fi
+  elif ! have jq; then
+    echo "Couldn't register the vault automatically — jq not found. Open Obsidian and add this vault manually: $TARGET_DIR"
+  else
+    if [ ! -f "$OBSIDIAN_CONFIG" ]; then
+      mkdir -p "$(dirname "$OBSIDIAN_CONFIG")"
+      echo '{}' > "$OBSIDIAN_CONFIG"
+    fi
+    if ! register_vault_in_config "$OBSIDIAN_CONFIG" "Obsidian"; then
+      echo "Open Obsidian and add this vault manually: $TARGET_DIR"
+    fi
+  fi
 fi
 
 # ─── 8. git ─────────────────────────────────────────────────────────────────
 if ! have git && have brew; then
-  echo "Installing git..."
-  brew install git
+  if [ "$DRY_RUN" = 1 ]; then
+    dry "would install git"
+  else
+    echo "Installing git..."
+    brew install git
+  fi
 fi
 
 if have git; then
   if [ ! -d "$TARGET_DIR/.git" ]; then
-    echo "Initializing local git repository..."
-    (cd "$TARGET_DIR" && git init -q && git add -A && \
-      git commit -q -m 'chore: initial local repository setup' 2>/dev/null || true)
-    echo "✓ Git repository initialized."
+    if [ "$DRY_RUN" = 1 ]; then
+      dry "would git init and commit in $TARGET_DIR"
+    else
+      echo "Initializing local git repository..."
+      (cd "$TARGET_DIR" && git init -q && git add -A && \
+        git commit -q -m 'chore: initial local repository setup' 2>/dev/null || true)
+      echo "✓ Git repository initialized."
+    fi
   else
     echo "✓ Git repository already set up."
   fi
 fi
 
 # ─── 9. Finder sidebar + Dock shortcut ───────────────────────────────────────
-sfltool add-bookmark "file://$TARGET_DIR" 2>/dev/null || true
 INBOX_DIR="$TARGET_DIR/_inbox"
-defaults write com.apple.dock persistent-others -array-add \
-  "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>$INBOX_DIR</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>tile-type</key><string>directory-tile</string></dict>" \
-  2>/dev/null || true
-killall Dock 2>/dev/null || true
-echo "✓ Wiki folder added to Finder sidebar; _inbox added to Dock."
+if [ "$DRY_RUN" = 1 ]; then
+  dry "would add $TARGET_DIR to Finder sidebar and $INBOX_DIR to Dock"
+else
+  sfltool add-bookmark "file://$TARGET_DIR" 2>/dev/null || true
+  defaults write com.apple.dock persistent-others -array-add \
+    "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>$INBOX_DIR</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>tile-type</key><string>directory-tile</string></dict>" \
+    2>/dev/null || true
+  killall Dock 2>/dev/null || true
+  echo "✓ Wiki folder added to Finder sidebar; _inbox added to Dock."
+fi
 
 # ─── Done — next steps and auth ──────────────────────────────────────────────
 echo
@@ -274,7 +424,9 @@ echo
 echo "  The wiki won't work until you're logged in."
 echo "  Opening a new Terminal window to log you in now..."
 echo
-if have claude; then
+if [ "$DRY_RUN" = 1 ]; then
+  dry "would open a new Terminal window and run: claude"
+elif have claude; then
   osascript -e 'tell application "Terminal" to do script "claude"'
 else
   echo "  Claude Code isn't on PATH right now."
