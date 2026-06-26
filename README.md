@@ -29,13 +29,12 @@ If you need to log in later, open Terminal and run:
 claude
 ```
 
-## 2. Open the vault and make it yours
+## 2. Make it yours
 
-Obsidian should already be open from setup (if not, launch it from Applications) — your wiki will already be in the vault list.
+Obsidian should already be open with this README showing and the Claudian panel ready in the right sidebar (if not, launch Obsidian from Applications — your wiki will already be in the vault list).
 
-1. Click on it to open it.
-2. When Obsidian shows a notice asking if you trust the vault, click **Trust author and enable plugins** — the Claudian plugin won't load without this.
-3. Open the Claudian panel from Obsidian's left sidebar and tell Claude what you want this wiki to cover — whose life or work it's for, and what's out of scope. Claude will fill in the scope section of `CLAUDE.md` for you.
+1. When Obsidian shows a notice asking if you trust the vault, click **Trust author and enable plugins** — the Claudian plugin won't load without this.
+2. In the Claudian panel, tell Claude what you want this wiki to cover — whose life or work it's for, and what's out of scope. Claude will fill in the scope section of `CLAUDE.md` for you.
 
 For example:
 

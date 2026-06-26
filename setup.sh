@@ -404,10 +404,16 @@ else
 fi
 
 # ─── 10. Open Obsidian ────────────────────────────────────────────────────────
+VAULT_NAME="$(basename "$TARGET_DIR")"
 if [ "$DRY_RUN" = 1 ]; then
-  dry "would open Obsidian"
+  dry "would open Obsidian directly to vault '$VAULT_NAME' (README + Claudian panel pre-configured to open)"
 elif [ -d "/Applications/Obsidian.app" ]; then
-  open -a Obsidian
+  if have jq; then
+    VAULT_NAME_ENC="$(jq -rn --arg v "$VAULT_NAME" '$v|@uri')"
+    open "obsidian://open?vault=$VAULT_NAME_ENC"
+  else
+    open -a Obsidian
+  fi
 else
   echo "Obsidian isn't installed — install it from https://obsidian.md, then open it manually."
 fi
@@ -419,12 +425,10 @@ echo "  Installation complete!"
 echo "════════════════════════════════════════════════════════"
 echo
 echo "  OPEN OBSIDIAN"
-echo "    1. Obsidian should now be open (if not, launch it from Applications)"
-echo "    2. Choose 'Open folder as vault'"
-echo "    3. Select: $TARGET_DIR"
-echo "    4. When asked to trust the vault, click:"
-echo "       'Trust author and enable plugins'"
-echo "       (Claudian won't work without this)"
+echo "    Obsidian should now be open with this wiki's README and the"
+echo "    Claudian panel already showing. When asked to trust the vault,"
+echo "    click 'Trust author and enable plugins'"
+echo "    (Claudian won't work without this)"
 echo
 echo "  WEB CLIPPER (save web pages to your wiki)"
 echo "    Install the browser extension: https://obsidian.md/clipper"
