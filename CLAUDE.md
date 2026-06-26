@@ -109,6 +109,7 @@ This repository is intended to be downloaded and set up locally, so each user sh
 - **markitdown** — CLI for converting non-markdown sources (PDF, Word, Excel, images with OCR, audio transcripts, HTML) to markdown during ingest. Run via `uv run markitdown <file>` (a project-local `.venv`, defined by `pyproject.toml`/`uv.lock`, keeps this reproducible across machines — see "Setup on a new machine" below).
 - **obsidian-skills** (`.claude/skills/`) — use for correct Obsidian-flavored markdown (wikilinks, callouts, properties, canvas) and for clipping web pages cleanly via Defuddle.
 - Search: at this scale, `wiki/index.md` plus `grep`/`Glob` is sufficient. Revisit `qmd` (hybrid BM25/vector/MCP search) only if the wiki grows past ~100-200 pages and `wiki/index.md` becomes unwieldy.
+- **Inbox monitoring** — from Claudian (Obsidian's embedded Claude Code panel), run `/loop /check-inbox` (self-paced) or `/loop 15m /check-inbox` (fixed interval) to get periodic notifications when new files land in `_inbox/`. Tied to that session's lifecycle, so it stops automatically when Obsidian closes. Notifies only — it doesn't file anything.
 
 ## Setup on a new machine
 
