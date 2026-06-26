@@ -83,6 +83,7 @@ Use `[[wikilinks]]` for all cross-references between pages. New pages start from
 ### Lint
 
 On request, check for:
+
 - Orphan pages with no inbound links.
 - Contradictions between pages (flag and ask the user, or resolve by source recency).
 - Concepts referenced but with no page of their own.
@@ -116,6 +117,7 @@ This repository is intended to be downloaded and set up locally, so each user sh
 If you move or copy this vault to a new machine, `.venv/` (Python virtualenv, dotfolder) should not travel with it — it's large and platform-specific. `pyproject.toml`, `uv.lock`, and `.python-version` do travel (they're plain files) and fully describe the environment.
 
 After the vault is on a new machine:
+
 1. Install `uv` if not already present: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 2. From the vault root, run `uv sync` once to materialize `.venv` locally.
 
