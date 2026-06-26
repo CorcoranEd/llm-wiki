@@ -9,7 +9,7 @@ This folder is a starter kit for a personal wiki that an AI helps you maintain. 
 - **uv** — a small helper Claude Code uses to convert PDFs and documents into text.
 - **Claudian** — an Obsidian plugin that connects Claude Code to your vault.
 
-## 1. Run the setup script
+## 1. Run the setup script and log in
 
 Open **Terminal** (press `Cmd+Space`, type "Terminal", hit Enter) and paste this one command:
 
@@ -21,9 +21,7 @@ That's it — no download needed first. The script fetches everything itself, as
 
 **Already downloaded this folder?** `cd` into it in Terminal and run `bash setup.sh`.
 
-## 2. Log in to Claude Code
-
-The script will launch Claude Code at the end and prompt you to log in. Follow the prompts to create or sign in to your Anthropic account. **The wiki won't work until this is done.**
+At the end, the script opens a new Terminal window and prompts you to log in to Claude Code — follow the prompts to create or sign in to your Anthropic account. **The wiki won't work until this is done.**
 
 If you need to log in later, open Terminal and run:
 
@@ -31,15 +29,13 @@ If you need to log in later, open Terminal and run:
 claude
 ```
 
-## 3. Open the vault in Obsidian
+## 2. Open the vault and make it yours
 
-1. Launch **Obsidian** from your Applications folder — your wiki will already be in the vault list.
-2. Click on it to open it.
-3. When Obsidian shows a notice asking if you trust the vault, click **Trust author and enable plugins** — the Claudian plugin won't load without this.
+Obsidian should already be open from setup (if not, launch it from Applications) — your wiki will already be in the vault list.
 
-## 4. Make this wiki yours
-
-Open the Claudian panel from Obsidian's left sidebar and tell Claude what you want this wiki to cover — whose life or work it's for, and what's out of scope. Claude will fill in the scope section of `CLAUDE.md` for you.
+1. Click on it to open it.
+2. When Obsidian shows a notice asking if you trust the vault, click **Trust author and enable plugins** — the Claudian plugin won't load without this.
+3. Open the Claudian panel from Obsidian's left sidebar and tell Claude what you want this wiki to cover — whose life or work it's for, and what's out of scope. Claude will fill in the scope section of `CLAUDE.md` for you.
 
 For example:
 
@@ -50,9 +46,9 @@ For example:
 
 The more specific you are, the better Claude's filing decisions will be. You can always update the scope later by asking Claude to revise it.
 
-## 5. Try it out
+## 3. Try it out
 
-Drop any file (a PDF, an article, a photo, a note) into the `_inbox` folder — there's a shortcut to it in your Dock — and ask Claude in the Claudian panel to file it. That's the wiki's normal way of taking in new material.
+Setup added an `_inbox` folder icon to your Dock, sitting next to your Downloads/Trash — drag any file onto it (a PDF, an article, a photo, a note) to drop it in, then ask Claude in the Claudian panel to file it. That's the wiki's normal way of taking in new material.
 
 ## If something goes wrong
 
