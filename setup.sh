@@ -283,6 +283,11 @@ else
         if [ "$DRY_RUN" = 1 ]; then
           echo "✓ [dry-run] Downloaded, mounted, and copied Obsidian.app to $DEST_DIR — pipeline works. (Left there for inspection — delete manually when done.)"
         else
+          # A raw cp -R bypasses the normal install paths that trigger Launch Services
+          # to index a new app — without this, the Dock icon can show as "?" and
+          # open/obsidian:// can fail to resolve the app until LS catches up on its own.
+          LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
+          [ -x "$LSREGISTER" ] && "$LSREGISTER" -f "$DEST_DIR/Obsidian.app" 2>/dev/null
           echo "✓ Obsidian installed."
         fi
       else
@@ -391,6 +396,7 @@ if [ "$DRY_RUN" = 1 ]; then
   dry "would add $TARGET_DIR to Finder sidebar, $INBOX_DIR to Dock, and pin Obsidian to the Dock"
 else
   sfltool add-bookmark "file://$TARGET_DIR" 2>/dev/null || true
+  killall Finder 2>/dev/null || true
   defaults write com.apple.dock persistent-others -array-add \
     "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>$INBOX_DIR</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>tile-type</key><string>directory-tile</string></dict>" \
     2>/dev/null || true
@@ -440,13 +446,36 @@ echo "  ⚠  LOG IN TO CLAUDE CODE (required)"
 echo "════════════════════════════════════════════════════════"
 echo
 echo "  The wiki won't work until you're logged in."
-echo "  Opening a new Terminal window to log you in now..."
+echo "  Logging you in now..."
 echo
 if [ "$DRY_RUN" = 1 ]; then
-  dry "would open a new Terminal window and run: claude"
+  dry "would skip the first-run theme wizard and run: claude auth login"
 elif have claude; then
-  osascript -e 'tell application "Terminal" to do script "claude"'
+  if have jq; then
+    # Pre-seed onboarding state (global, machine-wide — not project-scoped) so a
+    # fresh install skips straight past the cosmetic theme wizard to the actual
+    # login. Only sets these if absent; never overwrites a real existing value,
+    # and never touches hasTrustDialogAccepted (a real per-project security gate).
+    CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+    if [ ! -f "$CLAUDE_SETTINGS" ]; then
+      mkdir -p "$(dirname "$CLAUDE_SETTINGS")"
+      echo '{}' > "$CLAUDE_SETTINGS"
+    fi
+    if ! jq -e 'has("theme")' "$CLAUDE_SETTINGS" >/dev/null 2>&1; then
+      jq '.theme = "dark"' "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" 2>/dev/null \
+        && mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+    fi
+    CLAUDE_GLOBAL="$HOME/.claude.json"
+    if [ ! -f "$CLAUDE_GLOBAL" ]; then
+      echo '{}' > "$CLAUDE_GLOBAL"
+    fi
+    if ! jq -e '.hasCompletedOnboarding == true' "$CLAUDE_GLOBAL" >/dev/null 2>&1; then
+      jq '.hasCompletedOnboarding = true' "$CLAUDE_GLOBAL" > "$CLAUDE_GLOBAL.tmp" 2>/dev/null \
+        && mv "$CLAUDE_GLOBAL.tmp" "$CLAUDE_GLOBAL"
+    fi
+  fi
+  claude auth login
 else
   echo "  Claude Code isn't on PATH right now."
-  echo "  Open a new Terminal window and run:  claude"
+  echo "  Run this to log in:  claude auth login"
 fi
