@@ -14,12 +14,34 @@ This is an LLM-maintained wiki: an Obsidian vault organized with the [PARA metho
 - `_raw/` — immutable archive of source material. Claude never edits files here after filing. Every wiki page that draws on a source links back to its file here (`[[_raw/filename]]`).
 - `_raw/assets/` — images extracted from clippings or other sources.
 - `wiki/1-Projects/` — active, short-term efforts with a defined goal and end state. Every project gets its own folder named after the project, containing a main page of the same name plus any supporting pages (drafts, correspondence, working notes).
-- `wiki/2-Areas/` — ongoing responsibilities with no end date. Subfolders are created as needed.
-- `wiki/3-Resources/` — reference material on topics of interest. Subfolders are created as needed.
+- `wiki/2-Areas/` — ongoing responsibilities with no end date. Suggested starter Areas (rename/prune to fit the scope above — illustrative, not required): Health, Finance, Home, Career, Relationships, Learning, **People**. For work/research-scoped vaults, swap the scope-specific ones for domain-appropriate equivalents (e.g. Clients, Operations, Skill Areas) — see the example scopes in `README.md`. `People` is worth keeping in every scope: a place for pages about individuals referenced from other docs (family, colleagues, clients, interview subjects). It's filed as an Area, not a Resource, because maintaining a relationship is an ongoing responsibility with no end-state — `wiki/2-Areas/People/People.md` as its index page, each person a sub-topic folder below it (`wiki/2-Areas/People/Jane-Smith/Jane-Smith.md`).
+- `wiki/3-Resources/` — reference material on topics of interest.
 - `wiki/3-Resources/Meta/` — docs describing how this wiki itself works (the llm-wiki pattern docs, the PARA method article). Reference these when changing this schema.
 - `wiki/4-Archives/` — completed projects, inactive areas, retired resources. Mirrors the structure of 1/2/3.
 - `wiki/index.md` — catalog of every wiki page: link, one-line summary, tags, last updated. The first place to look when answering a query.
 - `wiki/log.md` — append-only log of ingest/query/lint operations, newest entries on top. Each entry starts with `## [YYYY-MM-DD] <ingest|query|lint> | <title>` so it stays greppable.
+
+### Folder rules
+
+- **No flat pages, ever**: every topic in `1-Projects/`, `2-Areas/`, or `3-Resources/` gets its own folder from the moment it's created — never a bare `.md` file directly inside the PARA folder.
+- **Required structure**: every topic folder (and sub-topic folder) contains a main page with the exact same name as the folder, even with zero supporting pages yet (`wiki/2-Areas/Health/Health.md`, not `wiki/2-Areas/Health.md`). Every topic folder is linked from `wiki/index.md` under its parent PARA section.
+- **Nesting limit — up to two layers of subfolders**: a topic folder like `wiki/2-Areas/Health/` may contain pages directly, or one further layer of sub-topic folders (e.g. `wiki/2-Areas/Health/Workouts/Workouts.md`, `wiki/2-Areas/Health/Workouts/Workout-1.md`), each following the same main-page-matches-folder-name rule. A sub-topic folder may not itself contain another folder. If a sub-topic needs deeper nesting still, split it into sibling sub-topic folders instead, related via `[[wikilinks]]`.
+- **Naming**: Title Case, folder name matches main page name exactly, no abbreviations.
+
+### Deciding Project vs Area vs Resource
+
+- **Project**: has a defined end-state/completion criteria. Test: "does this end?" → yes → Project.
+- **Area**: ongoing responsibility maintained indefinitely, no finish line. Test: "is this a duty I maintain indefinitely?" → yes → Area.
+- **Resource**: reference material on a topic of interest — informational, not an active duty. Test: if you're tracking status/progress/next-actions on it, it's actually an Area or Project, not a Resource.
+- **Archives**: when a Project completes, an Area goes inactive, or a Resource is retired, move its folder as-is into `wiki/4-Archives/`, mirroring the exact original structure — only `status`/`updated` frontmatter changes. Never restructure on archive.
+
+### Worked example: client work, contacts, and reusable skills
+
+- A bounded client engagement → `1-Projects/<Project>/` while active (has a real end-state); moves wholesale to `4-Archives/1-Projects/<Project>/` on completion, same structure, only frontmatter changes.
+- The client relationship/account itself (outlives any one project) → `2-Areas/Clients/<Client>/<Client>.md`; only archived once the relationship itself ends, not when one project for them finishes. Its main page can roster every project done for that client, active and archived.
+- People (individual contacts) → `2-Areas/People/<Name>/`, separate from the client's business entity; generally stay live even after a project or client relationship archives, since a person typically outlasts both.
+- Reusable skills/templates/artifacts produced or used across projects → `3-Resources/<Topic>/`; reference material, never auto-archived just because the project that produced it archives.
+- Cross-linking: Project pages link to their Client's Area page, the People involved, and any Resource/skill pages used; the Client's Area page becomes that client's project roster; `wiki/index.md` remains the master catalog across all of it.
 
 ## Conventions
 

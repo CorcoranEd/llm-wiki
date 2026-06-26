@@ -70,4 +70,4 @@ Drop any file (a PDF, an article, a photo, a note) into the `_inbox` folder — 
 
 Once the basics are working, `wiki/3-Resources/Meta/llm-wiki.md` (and `llm-wiki-v2.md`, `llm-wiki-v3.md`) explain the thinking behind how this wiki is organized — worth reading before changing how `CLAUDE.md` directs Claude's behaviour.
 
-The folder structure follows the **PARA method** (Projects, Areas, Resources, Archives) — a simple system for organizing everything in one place. There's a full overview at `wiki/3-Resources/Meta/The PARA Method…` inside the vault, or at [fortelabs.com/blog/para](https://fortelabs.com/blog/para).
+The folder structure follows the **PARA method** (Projects, Areas, Resources, Archives) — a simple system for organizing everything in one place. There's a full overview at `wiki/3-Resources/Meta/The PARA Method…` inside the vault, or at [fortelabs.com/blog/para](https://fortelabs.com/blog/para). See `CLAUDE.md`'s Structure section for the folder rules and a worked example of how client work, contacts, and reusable skills map onto these folders.
