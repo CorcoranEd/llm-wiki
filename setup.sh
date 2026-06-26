@@ -390,23 +390,39 @@ if have git; then
   fi
 fi
 
-# ─── 9. Finder sidebar + Dock shortcut ───────────────────────────────────────
+# ─── 8.5. dockutil (needed to pin Dock items correctly) ──────────────────────
+log_verbose "command -v dockutil: $(command -v dockutil 2>/dev/null || echo not found)"
+if have dockutil; then
+  echo "✓ dockutil already installed."
+elif [ "$DRY_RUN" = 1 ]; then
+  dry "would install dockutil"
+elif have brew; then
+  echo "Installing dockutil..."
+  brew install dockutil
+  if have dockutil; then
+    echo "✓ dockutil installed."
+  else
+    echo "dockutil installation failed. Obsidian and _inbox won't be pinned to the Dock — add them manually."
+  fi
+else
+  echo "Skipping dockutil — Homebrew isn't available. Obsidian and _inbox won't be pinned to the Dock."
+fi
+
+# ─── 9. Dock shortcuts ────────────────────────────────────────────────────────
+# Hand-rolled `defaults write ... persistent-apps` entries render as a "?" Dock
+# icon — real app tiles carry a binary NSURL bookmark (`book` field) that can't
+# be constructed via plain plist XML. dockutil builds correct entries for both
+# apps and folders, so it's used for both tiles here instead of two mechanisms.
 INBOX_DIR="$TARGET_DIR/_inbox"
 if [ "$DRY_RUN" = 1 ]; then
-  dry "would add $TARGET_DIR to Finder sidebar, $INBOX_DIR to Dock, and pin Obsidian to the Dock"
-else
-  sfltool add-bookmark "file://$TARGET_DIR" 2>/dev/null || true
-  killall Finder 2>/dev/null || true
-  defaults write com.apple.dock persistent-others -array-add \
-    "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>$INBOX_DIR</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>tile-type</key><string>directory-tile</string></dict>" \
-    2>/dev/null || true
+  dry "would pin $INBOX_DIR and Obsidian to the Dock via dockutil"
+elif have dockutil; then
+  dockutil --list 2>/dev/null | grep -qF "$INBOX_DIR" || dockutil --add "$INBOX_DIR" --no-restart 2>/dev/null
   if [ -d "/Applications/Obsidian.app" ]; then
-    defaults write com.apple.dock persistent-apps -array-add \
-      "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>file:///Applications/Obsidian.app/</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>" \
-      2>/dev/null || true
+    dockutil --list 2>/dev/null | grep -q "Obsidian" || dockutil --add "/Applications/Obsidian.app" --no-restart 2>/dev/null
   fi
   killall Dock 2>/dev/null || true
-  echo "✓ Wiki folder added to Finder sidebar; _inbox and Obsidian added to Dock."
+  echo "✓ _inbox and Obsidian added to Dock."
 fi
 
 # ─── 10. Open Obsidian ────────────────────────────────────────────────────────
@@ -435,6 +451,11 @@ echo "    Obsidian should now be open with this wiki's README and the"
 echo "    Claudian panel already showing. When asked to trust the vault,"
 echo "    click 'Trust author and enable plugins'"
 echo "    (Claudian won't work without this)"
+echo
+echo "  ADD TO FINDER SIDEBAR (optional)"
+echo "    Select the wiki folder in Finder and press ⌘⌃T, or drag it"
+echo "    into the sidebar — there's no reliable way to automate this"
+echo "    on current macOS."
 echo
 echo "  WEB CLIPPER (save web pages to your wiki)"
 echo "    Install the browser extension: https://obsidian.md/clipper"
