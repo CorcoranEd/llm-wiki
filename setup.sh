@@ -388,14 +388,28 @@ fi
 # ─── 9. Finder sidebar + Dock shortcut ───────────────────────────────────────
 INBOX_DIR="$TARGET_DIR/_inbox"
 if [ "$DRY_RUN" = 1 ]; then
-  dry "would add $TARGET_DIR to Finder sidebar and $INBOX_DIR to Dock"
+  dry "would add $TARGET_DIR to Finder sidebar, $INBOX_DIR to Dock, and pin Obsidian to the Dock"
 else
   sfltool add-bookmark "file://$TARGET_DIR" 2>/dev/null || true
   defaults write com.apple.dock persistent-others -array-add \
     "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>$INBOX_DIR</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>tile-type</key><string>directory-tile</string></dict>" \
     2>/dev/null || true
+  if [ -d "/Applications/Obsidian.app" ]; then
+    defaults write com.apple.dock persistent-apps -array-add \
+      "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>file:///Applications/Obsidian.app/</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>" \
+      2>/dev/null || true
+  fi
   killall Dock 2>/dev/null || true
-  echo "✓ Wiki folder added to Finder sidebar; _inbox added to Dock."
+  echo "✓ Wiki folder added to Finder sidebar; _inbox and Obsidian added to Dock."
+fi
+
+# ─── 10. Open Obsidian ────────────────────────────────────────────────────────
+if [ "$DRY_RUN" = 1 ]; then
+  dry "would open Obsidian"
+elif [ -d "/Applications/Obsidian.app" ]; then
+  open -a Obsidian
+else
+  echo "Obsidian isn't installed — install it from https://obsidian.md, then open it manually."
 fi
 
 # ─── Done — next steps and auth ──────────────────────────────────────────────
@@ -405,7 +419,7 @@ echo "  Installation complete!"
 echo "════════════════════════════════════════════════════════"
 echo
 echo "  OPEN OBSIDIAN"
-echo "    1. Launch Obsidian from Applications"
+echo "    1. Obsidian should now be open (if not, launch it from Applications)"
 echo "    2. Choose 'Open folder as vault'"
 echo "    3. Select: $TARGET_DIR"
 echo "    4. When asked to trust the vault, click:"
