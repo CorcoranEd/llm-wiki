@@ -8,6 +8,17 @@ This is an LLM-maintained wiki: an Obsidian vault organized with the [PARA metho
 
 **Scope**: <fill in — whose life/domain does this vault cover, and what's out of scope?>
 
+## Agents
+
+Four subagents handle wiki operations. Invoke them via the Agent tool or by naming them in a request.
+
+| Agent | Responsibility | When to use |
+| --- | --- | --- |
+| `wiki-ingestor` | Processes `_inbox/` into the wiki — converts files, decides PARA placement, creates/updates pages, files originals to `_raw/` | User drops new material in `_inbox/` and asks to ingest, file, or clip it |
+| `wiki-librarian` | Answers questions from existing wiki content — read-only retrieval and synthesis | User asks a question about what is in the wiki |
+| `wiki-linter` | Health-check pass — orphan pages, broken wikilinks, stale frontmatter, contradictions, retention review; updates `wiki/issues.md` | User asks for a lint or maintenance run |
+| `wiki-curator` | Interactive resolution of open issues — links orphans, archives superseded pages, resolves contradictions, audits content coherence, merges duplicates | User asks to "work through issues" or "curate the wiki" |
+
 ## Structure
 
 - `_inbox/` — drop zone. The user puts anything here (articles, PDFs, photos, scans, voice memos, web clips, raw notes) to be ingested. Should be empty between ingest sessions.
@@ -20,6 +31,7 @@ This is an LLM-maintained wiki: an Obsidian vault organized with the [PARA metho
 - `wiki/4-Archives/` — completed projects, inactive areas, retired resources. Mirrors the structure of 1/2/3.
 - `wiki/index.md` — catalog of every wiki page: link, one-line summary, tags, last updated. The first place to look when answering a query.
 - `wiki/log.md` — append-only log of ingest/query/lint operations, newest entries on top. Each entry starts with `## [YYYY-MM-DD] <ingest|query|lint> | <title>` so it stays greppable.
+- `wiki/issues.md` — persistent issues list maintained by the linter. Open items requiring human judgment: orphan pages, contradictions, missing pages, pages ready to archive, unreviewed content. The curator uses this as its work queue.
 
 ### Folder rules
 
@@ -30,8 +42,8 @@ This is an LLM-maintained wiki: an Obsidian vault organized with the [PARA metho
 
 ### Deciding Project vs Area vs Resource
 
-- **Project**: has a defined end-state/completion criteria. Test: "does this end?" → yes → Project.
-- **Area**: ongoing responsibility maintained indefinitely, no finish line. Test: "is this a duty I maintain indefinitely?" → yes → Area.
+- **Project**: has a defined end-state/completion criteria. Test: "does this end?" → yes → Project. When something feels like an Area but has a clear finish line, make it a Project instead.
+- **Area**: ongoing responsibility maintained indefinitely, no finish line. Areas can exist without any active Project under them — that is fine. An Area without current Projects is still a standing responsibility, not a candidate for Archives.
 - **Resource**: reference material on a topic of interest — informational, not an active duty. Test: if you're tracking status/progress/next-actions on it, it's actually an Area or Project, not a Resource.
 - **Archives**: when a Project completes, an Area goes inactive, or a Resource is retired, move its folder as-is into `wiki/4-Archives/`, mirroring the exact original structure — only `status`/`updated` frontmatter changes. Never restructure on archive.
 
@@ -52,45 +64,38 @@ YAML frontmatter on every wiki page (Properties + Bases are enabled, so this dri
 tags: [tag1, tag2]
 created: 2026-06-12
 updated: 2026-06-12
-status: active # for 1-Projects: active | someday | done
+status: active         # for 1-Projects: active | someday | done
 sources: ["[[_raw/some-file.pdf]]"]
+confidence: high       # high | medium | low | unreviewed (default: unreviewed)
+reviewed: 2026-06-12   # date of last deliberate review; linter flags if >6 months stale
+superseded_by: ""      # wikilink to newer page if this one is replaced
+supersedes: []         # wikilinks to pages this one replaces
 ---
 ```
 
+**Field semantics:**
+
+- `confidence`: how well-supported is the content — `high` (multiple corroborating sources), `medium` (single source or partially verified), `low` (speculative or second-hand), `unreviewed` (not yet assessed). Set by the ingestor on creation. Linter flags `unreviewed` pages older than 30 days.
+- `reviewed`: date the page was last deliberately checked for accuracy. Linter flags pages where `reviewed` is more than 6 months ago.
+- `superseded_by` / `supersedes`: links two related pages when one replaces another. Superseded pages get archived — once `superseded_by` is set, the old page moves to `wiki/4-Archives/` mirroring its original path. Only frontmatter changes on archive. Wikilinks in `supersedes:` still resolve after archiving since Obsidian links are vault-wide.
+
+**Typed relationships:**
+
+When a page has significant relationships to other pages beyond simple wikilinks, add a `## Relationships` section near the top of the page body using these relationship types:
+
+```markdown
+## Relationships
+
+- uses: [[Tool Name]]
+- depends on: [[Dependency]]
+- contradicts: [[Conflicting Page]]
+- supersedes: [[Old Page]]
+- related to: [[Adjacent Topic]]
+```
+
+These are prose but machine-readable enough for the linter to detect contradictions and the librarian to surface them in queries.
+
 Use `[[wikilinks]]` for all cross-references between pages. New pages start from `_templates/note.md`.
-
-## Workflows
-
-### Ingest
-
-1. List files in `_inbox/`.
-2. For each file:
-   - If it's not markdown (PDF, image, audio, docx, etc.), convert it first: `uv run markitdown <file> > _inbox/<file>.md`.
-   - Read it. For non-trivial sources, discuss the key takeaways with the user before filing.
-   - Decide PARA placement and create/update the relevant wiki page(s) — update cross-references in related pages too.
-   - Update `wiki/index.md`.
-   - Append an entry to `wiki/log.md`.
-   - Move the original file (plus any markitdown conversion and extracted images) from `_inbox/` to `_raw/` (images go in `_raw/assets/`).
-3. `_inbox/` should be empty when done.
-
-### Query
-
-1. Read `wiki/index.md` to find candidate pages.
-2. Read those pages, following `[[wikilinks]]` as needed.
-3. Answer with citations back to `_raw/` sources where relevant.
-4. If the answer is worth keeping (a synthesis, comparison, plan), offer to file it as a new page and update `wiki/index.md` / `wiki/log.md`.
-
-### Lint
-
-On request, check for:
-
-- Orphan pages with no inbound links.
-- Contradictions between pages (flag and ask the user, or resolve by source recency).
-- Concepts referenced but with no page of their own.
-- Stale `status`/`updated` frontmatter.
-- Anything left unprocessed in `_inbox/`.
-
-Log the lint run in `wiki/log.md` with what was found/fixed.
 
 ## Version control
 
@@ -107,10 +112,44 @@ This repository is intended to be downloaded and set up locally, so each user sh
 
 ## Tooling
 
-- **markitdown** — CLI for converting non-markdown sources (PDF, Word, Excel, images with OCR, audio transcripts, HTML) to markdown during ingest. Run via `uv run markitdown <file>` (a project-local `.venv`, defined by `pyproject.toml`/`uv.lock`, keeps this reproducible across machines — see "Setup on a new machine" below).
-- **obsidian-skills** (`.claude/skills/`) — use for correct Obsidian-flavored markdown (wikilinks, callouts, properties, canvas) and for clipping web pages cleanly via Defuddle.
-- Search: at this scale, `wiki/index.md` plus `grep`/`Glob` is sufficient. Revisit `qmd` (hybrid BM25/vector/MCP search) only if the wiki grows past ~100-200 pages and `wiki/index.md` becomes unwieldy.
-- **Inbox monitoring** — from Claudian (Obsidian's embedded Claude Code panel), run `/loop /check-inbox` (self-paced) or `/loop 15m /check-inbox` (fixed interval) to get periodic notifications when new files land in `_inbox/`. Tied to that session's lifecycle, so it stops automatically when Obsidian closes. Notifies only — it doesn't file anything.
+### Core ingest tools
+
+- **markitdown** — CLI for converting non-markdown sources (Word, Excel, HTML, images with OCR) to markdown during ingest. Run via `uv run markitdown <file>`. Default for most formats. Note: markitdown's audio support calls the OpenAI Whisper API remotely — use whisper.cpp instead for private or offline transcription.
+
+- **whisper.cpp** — local audio transcription on Apple Silicon (no API key, no remote calls). Install: `brew install whisper.cpp ffmpeg`. Use: `whisper-cpp --model base <file.m4a> --output-txt`. Drop the resulting `.txt` in `_inbox/`. Recommended for Voice Memos, interview recordings, podcast clips.
+
+- **pymupdf4llm + marker-pdf** — tiered PDF upgrade beyond markitdown's basic extraction:
+  - `pymupdf4llm`: fastest for native PDFs with embedded text (`uv add pymupdf4llm`)
+  - `marker_single`: handles scanned PDFs and complex layouts; uses Apple MPS GPU on Apple Silicon (`uv add marker-pdf`)
+  - markitdown remains the default; escalate to these only when extraction quality is poor
+
+- **Image handling** — markitdown extracts images from clipped content; those land in `_raw/assets/` and should be referenced in wiki pages with `![[_raw/assets/image.png]]`.
+
+- **Sensitive data** — never file content containing API keys, credentials, tokens, or passwords. Redact before filing, or ask the user whether to omit.
+
+### Optional ingest sources
+
+- **apple-mail-mcp** — MCP server for pulling emails directly into an ingest session without manual export. Install: `claude plugin marketplace add patrickfreyer/apple-mail-mcp`. Requires Mail.app automation permission in System Settings.
+
+- **transcriptor-mcp** — MCP server for YouTube, podcast, and video transcription via yt-dlp and local Whisper. Add to `~/.claude/settings.json` when video/podcast content is a regular ingest source. See github.com/samson-art/transcriptor-mcp.
+
+- **Obsidian Web Clipper** — official Obsidian browser extension for quick web capture outside Claude sessions. Set the destination folder to `_inbox/`. Complements Defuddle (Defuddle is used inside Claude sessions; Web Clipper is for browser-side quick capture).
+
+- **Hazel / Shortcuts** — macOS automation for auto-populating `_inbox/`. Hazel can watch `~/Downloads` and route PDFs, audio files, and exports automatically. Shortcuts handles simpler one-off triggers (share-sheet → `_inbox/`).
+
+### Search
+
+Search scales with vault size:
+
+- **Tier 1 — current (under ~100 pages)**: grep + `wiki/index.md`. Fast, zero setup, already in place. Weaknesses: no synonym matching, no concept-level retrieval.
+
+- **Tier 2 — semantic scaffold (install now, activate when needed)**: Smart Connections Obsidian plugin builds local embeddings passively as you write. No API key, no model download — uses a bundled `bge-micro-v2` model. When MCP-accessible semantic search is needed, add the `smart-connections-mcp` bridge to `~/.claude/settings.json`. Install via Obsidian Community Plugins.
+
+- **Tier 3 — full hybrid search (100–200+ pages)**: qmd (`@tobilu/qmd` on npm) runs BM25 + vector + LLM re-ranking entirely on-device and exposes an MCP server Claude Code queries natively via `qmd_deep_search`. Install: `npm install -g @tobilu/qmd`, then `qmd collection add <vault-path> --name wiki && qmd embed`. Requires ~2GB model download on first run; reindex after bulk ingests with `qmd embed`.
+
+### Obsidian skills
+
+`obsidian-skills` (`.claude/skills/`) — use for correct Obsidian-flavored markdown (wikilinks, callouts, properties, canvas) and for clipping web pages cleanly via Defuddle.
 
 ## Setup on a new machine
 
@@ -120,5 +159,7 @@ After the vault is on a new machine:
 
 1. Install `uv` if not already present: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 2. From the vault root, run `uv sync` once to materialize `.venv` locally.
+3. Optionally install whisper.cpp for local audio transcription: `brew install whisper.cpp ffmpeg`
+4. Optionally install PDF tools for complex documents: `uv add pymupdf4llm marker-pdf`
 
 No other setup should be required for the ingest workflow.
