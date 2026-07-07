@@ -25,11 +25,29 @@ When invoked to "work through issues" or "curate the wiki", begin by reading `wi
 
 **Contradictions** — show both pages side by side with the conflicting claims. Ask which is correct. Options: mark the weaker one `confidence: low` with an explanatory note; or have the newer one explicitly supersede the older (sets `supersedes`/`superseded_by` and queues the old one for archiving).
 
-**Missing pages** — for each concept flagged as referenced but without a page, offer to create a stub using `_templates/note.md` with `confidence: unreviewed`. Ask the user to confirm PARA placement and page title before writing.
+**Missing pages** — for each concept flagged as referenced but without a page, offer to create a stub using the fileClass-matched template (`_config/templates/Project.md`/`Area.md`/`Resource.md`/`Person.md`, falling back to `_config/templates/note.md` for non-PARA pages) with `confidence: unreviewed` and `fileClass:` set to match. Ask the user to confirm PARA placement and page title before writing.
+
+**Out-of-Enum Status Values** — for each page flagged, show the current `status` value and the page's fileClass's valid options. Ask the user which one applies — or whether the enum itself needs a new value, in which case flag it back to the user as a schema change rather than deciding unilaterally. `Edit` the page and remove it from `issues.md`.
 
 ## Proactive curation
 
 When invoked for general curation (not just issues), work through these in addition:
+
+**Task priority assessment** — when reviewing tasks in `## Tasks` sections, assess each incomplete task's priority based on its likely impact on the project's goal and assign a Tasks plugin priority emoji if none is present. Use this rubric:
+- 🔺 Highest: blocks the entire project from moving forward, or has an imminent external deadline
+- ⏫ High: significant impact on the plan, should be done before most other tasks
+- 🔼 Medium: useful but not blocking; the project can progress without it for now
+- (no emoji): routine or minor, low consequence either way
+- 🔽 Low: nice-to-have, do last
+
+Add the emoji inline after the task text: `- [ ] Task description ⏫`. Do not re-assess tasks that already have a priority emoji. The user can override any assessment.
+
+**Completed task resolution** — scan every page being reviewed for checked tasks (`- [x]`) in `## Tasks` sections. For each one found, use `AskUserQuestion` to confirm it is genuinely complete and ask for the outcome or answer in one sentence. Once the user provides it:
+- Remove the `- [x]` line from `## Tasks`
+- Append `- **<task summary>:** <user's outcome>` to the `## Outcomes` section (create the section if absent)
+- If the outcome reveals new information worth capturing elsewhere (e.g. a decision, a resolved ambiguity), note it in your session report
+
+Do this page by page. Do not batch across multiple pages in a single question.
 
 **Upgrade confidence ratings** — scan for pages with `confidence: unreviewed`. For each, show the user a one-paragraph summary of the content and ask: high, medium, or low? Update frontmatter with `Edit`.
 

@@ -1,0 +1,51 @@
+{
+  "command_timeout": 5,
+  "templates_folder": "_config/templates",
+  "templates_pairs": [
+    [
+      "",
+      ""
+    ]
+  ],
+  "trigger_on_file_creation": true,
+  "auto_jump_to_cursor": false,
+  "enable_system_commands": false,
+  "shell_path": "",
+  "user_scripts_folder": "",
+  "enable_folder_templates": true,
+  "folder_templates": [
+    {
+      "folder": "wiki/1-Projects",
+      "template": "_config/templates/Project"
+    },
+    {
+      "folder": "wiki/2-Areas/People",
+      "template": "_config/templates/Person"
+    },
+    {
+      "folder": "wiki/2-Areas",
+      "template": "_config/templates/Area"
+    },
+    {
+      "folder": "wiki/3-Resources",
+      "template": "_config/templates/Resource"
+    }
+  ],
+  "enable_file_templates": false,
+  "file_templates": [
+    {
+      "regex": ".*",
+      "template": ""
+    }
+  ],
+  "syntax_highlighting": true,
+  "syntax_highlighting_mobile": false,
+  "enabled_templates_hotkeys": [
+    ""
+  ],
+  "startup_templates": [
+    ""
+  ],
+  "intellisense_render": 1,
+  "ignore_folders_on_creation": []
+}

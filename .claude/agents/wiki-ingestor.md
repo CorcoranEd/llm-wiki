@@ -34,8 +34,13 @@ You are the ingestor for this wiki. Your only job is getting new material from `
    - Resource: reference material, not an active duty
    - Every topic gets its own folder; the main page name matches the folder name exactly
 
-7. **Create or update wiki pages** using `_templates/note.md` as the starting point for new pages:
-   - Set `confidence` based on source quality: `high` (multiple corroborating sources), `medium` (single source or partially verified), `low` (speculative or second-hand)
+7. **Create or update wiki pages** using the fileClass-matched template as the starting point for new pages (`_config/templates/Project.md` / `Area.md` / `Resource.md` / `Person.md` based on the PARA placement just decided, falling back to `_config/templates/note.md` for pages that don't fit a PARA type) — set `fileClass:` to match and use that type's `status` enum (Project: `active|on-hold|someday|done`; Area: `active|inactive`; Resource: `active|retired`; Person: no `status` field):
+   - When adding tasks to `## Tasks` sections, assign a priority emoji based on likely impact on the project goal: 🔺 blocks the project or has an imminent deadline; ⏫ high impact, should happen soon; 🔼 medium, useful but not blocking; no emoji for routine items; 🔽 low, do last. Add inline after the task text: `- [ ] Task description ⏫`
+   - Set `confidence` based on the source type — use this rubric:
+     - `high`: primary document with no ambiguity — a signed contract, official statement, bank record, government letter, receipt. You have the actual evidence.
+     - `medium`: a single credible source that has not been independently verified — a tradesperson quote, a news article, notes from a phone call, a single webpage.
+     - `low`: speculative, second-hand, or explicitly uncertain — rough notes, "I think / I heard / around $X", anything the user flagged as approximate.
+     - `unreviewed`: genuinely mixed or ambiguous sources where you cannot confidently assign a level — e.g. a document that mixes verified facts with speculation. Use sparingly; this is not the default.
    - Set `reviewed` to today's date
    - Set `sources` to link back to the file in `_raw/`
    - Add a `## Relationships` section where the source has meaningful connections to existing pages

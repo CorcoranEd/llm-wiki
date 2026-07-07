@@ -1,0 +1,202 @@
+{
+  "presetFields": [
+    {
+      "type": "Date",
+      "tagName": "date",
+      "icon": "calendar-with-checkmark",
+      "tooltip": "Accepts a date",
+      "colorClass": "date",
+      "options": {
+        "dateFormat": "YYYY-MM-DD",
+        "defaultInsertAsLink": false,
+        "linkPath": ""
+      },
+      "name": "created",
+      "id": "00347cf2-07fc-4a94-8ed9-d0ff870067d7",
+      "path": ""
+    },
+    {
+      "type": "Multi",
+      "tagName": "multi",
+      "icon": "list",
+      "tooltip": "Accepts multiple values from a list",
+      "colorClass": "multi",
+      "options": {
+        "sourceType": "ValuesList",
+        "valuesList": {},
+        "valuesListNotePath": "",
+        "valuesFromDVQuery": ""
+      },
+      "name": "sources",
+      "id": "26832f86-e2b3-400c-8bba-128435dd1925",
+      "path": ""
+    },
+    {
+      "type": "Multi",
+      "tagName": "multi",
+      "icon": "list",
+      "tooltip": "Accepts multiple values from a list",
+      "colorClass": "multi",
+      "options": {
+        "sourceType": "ValuesFromDVQuery",
+        "valuesList": {},
+        "valuesListNotePath": "",
+        "valuesFromDVQuery": "dv.pages().file.tags.values"
+      },
+      "name": "tags",
+      "id": "27d550d7-df4a-4bef-8674-d9955a149419",
+      "path": ""
+    },
+    {
+      "type": "Date",
+      "tagName": "date",
+      "icon": "calendar-with-checkmark",
+      "tooltip": "Accepts a date",
+      "colorClass": "date",
+      "options": {
+        "dateFormat": "YYYY-MM-DD",
+        "defaultInsertAsLink": false,
+        "linkPath": ""
+      },
+      "name": "updated",
+      "id": "67116bc8-98a6-40a4-bb41-f81fc579dd6d",
+      "path": ""
+    },
+    {
+      "type": "Select",
+      "tagName": "select",
+      "icon": "right-triangle",
+      "tooltip": "Accepts a single value from a list",
+      "colorClass": "select",
+      "options": {
+        "sourceType": "ValuesList",
+        "valuesList": {
+          "high": "high",
+          "medium": "medium",
+          "low": "low"
+        },
+        "valuesListNotePath": "",
+        "valuesFromDVQuery": ""
+      },
+      "name": "priority",
+      "id": "9d9b2464-dd7b-4395-8ef6-ce0c3396114a",
+      "path": ""
+    },
+    {
+      "type": "Input",
+      "tagName": "input",
+      "icon": "pencil",
+      "tooltip": "Accepts any value",
+      "colorClass": "input",
+      "options": {},
+      "name": "superseded_by",
+      "id": "a2f76a24-2c27-4f74-9df6-dda8bf44a66c",
+      "path": ""
+    },
+    {
+      "type": "Select",
+      "tagName": "select",
+      "icon": "right-triangle",
+      "tooltip": "Accepts a single value from a list",
+      "colorClass": "select",
+      "options": {
+        "sourceType": "ValuesList",
+        "valuesList": {
+          "active": "active",
+          "someday": "someday",
+          "done": "done",
+          "on-hold": "on-hold"
+        },
+        "valuesListNotePath": "",
+        "valuesFromDVQuery": ""
+      },
+      "name": "status",
+      "id": "d5adac8e-9a91-4d2b-9484-7a672856e0e2",
+      "path": ""
+    },
+    {
+      "type": "Date",
+      "tagName": "date",
+      "icon": "calendar-with-checkmark",
+      "tooltip": "Accepts a date",
+      "colorClass": "date",
+      "options": {
+        "dateFormat": "YYYY-MM-DD",
+        "defaultInsertAsLink": false,
+        "linkPath": ""
+      },
+      "name": "reviewed",
+      "id": "dcdc469c-2e9d-4b91-a680-b765f9342d3d",
+      "path": ""
+    },
+    {
+      "type": "Multi",
+      "tagName": "multi",
+      "icon": "list",
+      "tooltip": "Accepts multiple values from a list",
+      "colorClass": "multi",
+      "options": {
+        "sourceType": "ValuesList",
+        "valuesList": {},
+        "valuesListNotePath": "",
+        "valuesFromDVQuery": ""
+      },
+      "name": "supersedes",
+      "id": "efc6a336-693f-4dce-aebb-b65a9e37454e",
+      "path": ""
+    },
+    {
+      "type": "Select",
+      "tagName": "select",
+      "icon": "right-triangle",
+      "tooltip": "Accepts a single value from a list",
+      "colorClass": "select",
+      "options": {
+        "sourceType": "ValuesList",
+        "valuesList": {
+          "high": "high",
+          "medium": "medium",
+          "low": "low",
+          "unreviewed": "unreviewed"
+        },
+        "valuesListNotePath": "",
+        "valuesFromDVQuery": ""
+      },
+      "name": "confidence",
+      "id": "f65e4dcb-e283-4fde-b6f4-1334ccf68da4",
+      "path": ""
+    }
+  ],
+  "fileClassQueries": [],
+  "displayFieldsInContextMenu": true,
+  "globallyIgnoredFields": [],
+  "classFilesPath": "_config/fileclasses/",
+  "isAutosuggestEnabled": true,
+  "fileClassAlias": "fileClass",
+  "settingsVersion": "5.0",
+  "firstDayOfWeek": 1,
+  "enableLinks": false,
+  "enableTabHeader": false,
+  "enableEditor": true,
+  "enableBacklinks": false,
+  "enableStarred": true,
+  "enableFileExplorer": false,
+  "enableSearch": false,
+  "enableProperties": true,
+  "tableViewMaxRecords": 20,
+  "frontmatterListDisplay": "asArray",
+  "fileClassExcludedFolders": [],
+  "showIndexingStatusInStatusBar": true,
+  "fileIndexingExcludedFolders": [],
+  "fileIndexingExcludedExtensions": [
+    ".excalidraw.md"
+  ],
+  "fileIndexingExcludedRegex": [],
+  "frontmatterOnly": false,
+  "showFileClassSelectInModal": true,
+  "chooseFileClassAtFileCreation": false,
+  "autoInsertFieldsAtFileClassInsertion": false,
+  "fileClassIcon": "package",
+  "isAutoCalculationEnabled": true,
+  "disableDataviewPrompt": false
+}

@@ -8,6 +8,11 @@ This folder is a starter kit for a personal wiki that an AI helps you maintain. 
 - **Claude Code** — the AI that does the filing and organizing.
 - **uv** — a small helper Claude Code uses to convert PDFs and documents into text.
 - **Claudian** — an Obsidian plugin that connects Claude Code to your vault.
+- **Templater + Metadata Menu** — typed page templates: new pages auto-fill their date fields and title, and get a proper dropdown/date-picker UI for fields like status and priority instead of plain text.
+- **QuickAdd** — a one-click "Capture to Inbox" command for quick notes, no need to navigate to the `_inbox` folder manually.
+- **Dataview, Smart Connections, Tasks, Homepage, Excalidraw** — behind-the-scenes plugins that power the wiki's live status dashboard, local semantic search, task tracking, startup behavior, and freeform diagrams. You won't need to configure any of these yourself.
+
+All of the above ship bundled with this repo, the same way Claudian does — nothing extra to install.
 
 ## 1. Run the setup script and log in
 
@@ -60,6 +65,26 @@ Setup added an `_inbox` folder icon to your Dock, sitting next to your Downloads
 **Web Clipper** — Install the [Obsidian Web Clipper](https://obsidian.md/clipper) browser extension to save web pages directly to your `_inbox`. In the extension settings, choose this vault and set the save location to `_inbox` — clipped pages land there as markdown, ready to file.
 
 **Backup to GitHub** — This folder uses git to keep a history of every change, so you can undo mistakes or look back at earlier versions. To back it up to GitHub, just ask Claude — it can walk you through the setup.
+
+## Updating an existing wiki
+
+If you set up this wiki a while ago, `migrate.sh` brings it up to date with the current schema — new plugins, page templates, field definitions, `CLAUDE.md`, and agent instructions — without touching your actual notes or content.
+
+From your wiki folder, run:
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/CorcoranEd/llm-wiki/main/migrate.sh)"
+```
+
+Or, if you already have this folder downloaded: `bash migrate.sh`.
+
+Add `--dry-run` first to see exactly what would change before anything is written, and `--verbose` for full details:
+
+```sh
+bash migrate.sh --dry-run --verbose
+```
+
+Every file it changes is backed up first, to `.migration-backup/<timestamp>/` in your wiki folder — nothing is overwritten without a copy saved. The one structural change it makes automatically: if your wiki still has `_templates/note.md`, it gets moved to `_config/templates/note.md` as part of this update — that's expected, not an error.
 
 ## Going deeper
 

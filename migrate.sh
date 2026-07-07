@@ -79,7 +79,8 @@ backup_file() {
 }
 
 # ─── Strategy A: compare and overwrite ───────────────────────────────────────
-# For agent files and commands. Not user-edited; overwrite if content differs.
+# For agent files, commands, fileClass definitions, and plugin code. Not
+# user-edited; overwrite if content differs.
 
 apply_a() {
   local file="$1" canonical="$2"
@@ -96,12 +97,20 @@ apply_a() {
     echo "  ✓ up to date: $file"
     SKIPPED=$((SKIPPED + 1))
   else
-    if [ "$VERBOSE" = 1 ]; then
+    # Skip full-content diffing for large files (e.g. plugin main.js bundles) —
+    # a diff over a multi-MB, near-single-line minified file is unreadable and slow.
+    local size
+    size=$(wc -c < "$file" 2>/dev/null || echo 0)
+    if [ "$VERBOSE" = 1 ] && [ "$size" -lt 100000 ]; then
       diff <(cat "$file") <(printf '%s\n' "$canonical") | head -40 || true
+    elif [ "$VERBOSE" = 1 ]; then
+      log_verbose "$file is $(( size / 1024 ))KB — skipping full diff"
     fi
     if [ "$DRY_RUN" = 1 ]; then
       local stat
-      stat=$(diff --stat <(cat "$file") <(printf '%s\n' "$canonical") 2>/dev/null | tail -1 || true)
+      if [ "$size" -lt 100000 ]; then
+        stat=$(diff --stat <(cat "$file") <(printf '%s\n' "$canonical") 2>/dev/null | tail -1 || true)
+      fi
       echo "  [dry-run] would update: $file  ${stat:+(${stat})}"
     else
       backup_file "$file"
@@ -136,18 +145,19 @@ apply_b() {
 }
 
 # ─── Strategy C: frontmatter-only merge ──────────────────────────────────────
-# For _templates/note.md. Adds any frontmatter fields present in the canonical
-# version but absent locally. Never touches existing field values or the body.
+# For templates under _config/templates/. Adds any frontmatter fields present
+# in the canonical version but absent locally. Never touches existing field
+# values or the body.
 
 apply_c() {
-  local canonical="$1"
+  local file="$1" canonical="$2"
 
-  if [ ! -f "_templates/note.md" ]; then
+  if [ ! -f "$file" ]; then
     if [ "$DRY_RUN" = 1 ]; then
-      echo "  [dry-run] would create: _templates/note.md"
+      echo "  [dry-run] would create: $file"
     else
-      write_file "_templates/note.md" "$canonical"
-      echo "  ✓ created: _templates/note.md"
+      write_file "$file" "$canonical"
+      echo "  ✓ created: $file"
     fi
     CREATED=$((CREATED + 1))
     return
@@ -161,17 +171,17 @@ apply_c() {
   local added=0
   while IFS= read -r key; do
     [ -z "$key" ] && continue
-    if ! grep -q "^${key}:" "_templates/note.md"; then
+    if ! grep -q "^${key}:" "$file"; then
       local field_line
       field_line=$(grep "^${key}:" <<< "$canonical" | head -1)
       [ -z "$field_line" ] && continue
 
       if [ "$DRY_RUN" = 1 ]; then
-        echo "  [dry-run] would add frontmatter field: $key"
+        echo "  [dry-run] would add frontmatter field to $file: $key"
       else
-        [ "$added" = 0 ] && backup_file "_templates/note.md"
+        [ "$added" = 0 ] && backup_file "$file"
         # Insert the new field before the closing --- of the frontmatter block
-        python3 - "$field_line" "_templates/note.md" <<'PYEOF'
+        python3 - "$field_line" "$file" <<'PYEOF'
 import sys
 field, path = sys.argv[1], sys.argv[2]
 with open(path) as f:
@@ -184,23 +194,24 @@ if len(parts) >= 3:
 with open(path, 'w') as f:
     f.write(content)
 PYEOF
-        echo "  ✓ added template field: $key"
+        echo "  ✓ added template field to $file: $key"
       fi
       UPDATED=$((UPDATED + 1))
       added=$((added + 1))
     else
-      log_verbose "template field already present: $key"
+      log_verbose "template field already present in $file: $key"
     fi
   done <<< "$canonical_keys"
 
   if [ "$added" = 0 ]; then
-    echo "  ✓ up to date: _templates/note.md"
+    echo "  ✓ up to date: $file"
     [ "$DRY_RUN" = 0 ] && SKIPPED=$((SKIPPED + 1))
   fi
 }
 
 # ─── Strategy D: create only ─────────────────────────────────────────────────
-# For wiki/issues.md. Only created if absent — the linter owns it after that.
+# For wiki/issues.md and plugin settings (data.json) a user may have already
+# customized. Only created if absent — never overwritten after that.
 
 apply_d() {
   local file="$1" canonical="$2"
@@ -214,9 +225,159 @@ apply_d() {
     fi
     CREATED=$((CREATED + 1))
   else
-    echo "  ✓ up to date: $file  (linter-managed, not overwritten)"
+    echo "  ✓ up to date: $file  (not overwritten — may hold local customization)"
     SKIPPED=$((SKIPPED + 1))
   fi
+}
+
+# ─── Strategy E: JSON array union-merge ──────────────────────────────────────
+# For .obsidian/community-plugins.json. Adds any plugin IDs present in the
+# canonical list but missing locally; keeps every existing local entry
+# (including plugins the user added independently) and never reorders/removes.
+
+apply_e() {
+  local file="$1" canonical="$2"
+
+  if [ ! -f "$file" ]; then
+    if [ "$DRY_RUN" = 1 ]; then
+      echo "  [dry-run] would create: $file"
+    else
+      write_file "$file" "$canonical"
+      echo "  ✓ created: $file"
+    fi
+    CREATED=$((CREATED + 1))
+    return
+  fi
+
+  local tmp_canonical merged
+  tmp_canonical=$(mktemp)
+  printf '%s' "$canonical" > "$tmp_canonical"
+
+  merged=$(python3 - "$file" "$tmp_canonical" <<'PYEOF'
+import json, sys
+local_path, canon_path = sys.argv[1], sys.argv[2]
+with open(local_path) as f:
+    local = json.load(f)
+with open(canon_path) as f:
+    canon = json.load(f)
+merged = local + [x for x in canon if x not in local]
+print(json.dumps(merged, indent=2))
+PYEOF
+)
+  rm -f "$tmp_canonical"
+
+  if [ -z "$merged" ]; then
+    echo "  ✗ could not parse $file as JSON — skipping merge"
+    ERRORS=$((ERRORS + 1))
+    return
+  fi
+
+  if [ "$(cat "$file")" = "$merged" ]; then
+    echo "  ✓ up to date: $file"
+    [ "$DRY_RUN" = 0 ] && SKIPPED=$((SKIPPED + 1))
+  else
+    if [ "$DRY_RUN" = 1 ]; then
+      echo "  [dry-run] would update: $file  (merge in any missing plugin IDs)"
+    else
+      backup_file "$file"
+      printf '%s\n' "$merged" > "$file"
+      echo "  ✓ updated: $file"
+    fi
+    UPDATED=$((UPDATED + 1))
+  fi
+}
+
+# ─── Strategy F: named-section merge ─────────────────────────────────────────
+# For wiki/index.md. Inserts or updates the fixed "## Status Board" section
+# (matched by heading, ending at the next "## " heading) while leaving
+# everything else — the user's hand-maintained PARA catalog — untouched.
+
+apply_f() {
+  local file="$1" canonical="$2"
+
+  if [ ! -f "$file" ]; then
+    if [ "$DRY_RUN" = 1 ]; then
+      echo "  [dry-run] would create: $file"
+    else
+      write_file "$file" "$canonical"
+      echo "  ✓ created: $file"
+    fi
+    CREATED=$((CREATED + 1))
+    return
+  fi
+
+  local tmp_canonical result
+  tmp_canonical=$(mktemp)
+  printf '%s\n' "$canonical" > "$tmp_canonical"
+
+  result=$(python3 - "$file" "$tmp_canonical" <<'PYEOF'
+import sys
+local_path, canon_path = sys.argv[1], sys.argv[2]
+with open(local_path) as f:
+    local = f.read()
+with open(canon_path) as f:
+    canon = f.read()
+
+HEADING = "## Status Board"
+
+def extract_section(text):
+    lines = text.split('\n')
+    try:
+        start = next(i for i, l in enumerate(lines) if l.strip() == HEADING)
+    except StopIteration:
+        return None
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        if lines[i].startswith('## '):
+            end = i
+            break
+    return '\n'.join(lines[start:end]).rstrip('\n') + '\n'
+
+canon_section = extract_section(canon)
+if canon_section is None:
+    print(local, end='')
+    sys.exit(0)
+
+local_section = extract_section(local)
+if local_section == canon_section:
+    print("UNCHANGED", end='')
+    sys.exit(0)
+
+lines = local.split('\n')
+if local_section is None:
+    try:
+        insert_at = next(i for i, l in enumerate(lines) if l.startswith('## '))
+    except StopIteration:
+        insert_at = len(lines)
+    new_lines = lines[:insert_at] + canon_section.split('\n') + [''] + lines[insert_at:]
+else:
+    start = next(i for i, l in enumerate(lines) if l.strip() == HEADING)
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        if lines[i].startswith('## '):
+            end = i
+            break
+    new_lines = lines[:start] + canon_section.split('\n') + lines[end:]
+
+print('\n'.join(new_lines), end='')
+PYEOF
+)
+  rm -f "$tmp_canonical"
+
+  if [ "$result" = "UNCHANGED" ]; then
+    echo "  ✓ up to date: $file"
+    [ "$DRY_RUN" = 0 ] && SKIPPED=$((SKIPPED + 1))
+    return
+  fi
+
+  if [ "$DRY_RUN" = 1 ]; then
+    echo "  [dry-run] would update: $file  (Status Board section)"
+  else
+    backup_file "$file"
+    printf '%s\n' "$result" > "$file"
+    echo "  ✓ updated: $file  (Status Board section)"
+  fi
+  UPDATED=$((UPDATED + 1))
 }
 
 # ─── 1. Agent files and commands (Strategy A) ─────────────────────────────────
@@ -240,16 +401,87 @@ echo "Checking CLAUDE.md..."
 canonical=$(fetch "CLAUDE.md") && apply_b "$canonical" || true
 echo
 
-# ─── 3. _templates/note.md (Strategy C) ──────────────────────────────────────
+# ─── 3. _config/ directory layout ────────────────────────────────────────────
+# Older vaults ship _templates/note.md at the old location. Move it (with
+# backup) before running the template merge below — otherwise a fresh
+# _config/templates/note.md would be created from scratch and the user's
+# customized old template would be silently orphaned at _templates/note.md.
 
-echo "Checking _templates/note.md..."
-canonical=$(fetch "_templates/note.md") && apply_c "$canonical" || true
+echo "Checking _config/ directory layout..."
+if [ -f "_templates/note.md" ] && [ ! -f "_config/templates/note.md" ]; then
+  if [ "$DRY_RUN" = 1 ]; then
+    echo "  [dry-run] would move: _templates/note.md -> _config/templates/note.md"
+  else
+    mkdir -p "_config/templates"
+    backup_file "_templates/note.md"
+    mv "_templates/note.md" "_config/templates/note.md"
+    rmdir "_templates" 2>/dev/null || true
+    echo "  ✓ moved: _templates/note.md -> _config/templates/note.md"
+  fi
+  UPDATED=$((UPDATED + 1))
+else
+  log_verbose "no _templates/ -> _config/ move needed"
+fi
 echo
 
-# ─── 4. wiki/issues.md (Strategy D) ──────────────────────────────────────────
+# ─── 4. _config/templates/*.md (Strategy C) ──────────────────────────────────
+
+echo "Checking _config/templates/..."
+for file in note Project Area Resource Person inbox-capture; do
+  canonical=$(fetch "_config/templates/${file}.md") || continue
+  apply_c "_config/templates/${file}.md" "$canonical"
+done
+echo
+
+# ─── 5. _config/fileclasses/*.md (Strategy A) ────────────────────────────────
+
+echo "Checking _config/fileclasses/..."
+for file in Base Project Area Resource Person; do
+  canonical=$(fetch "_config/fileclasses/${file}.md") || continue
+  apply_a "_config/fileclasses/${file}.md" "$canonical"
+done
+echo
+
+# ─── 6. wiki/issues.md (Strategy D) ──────────────────────────────────────────
 
 echo "Checking wiki/issues.md..."
 canonical=$(fetch "wiki/issues.md") && apply_d "wiki/issues.md" "$canonical" || true
+echo
+
+# ─── 7. wiki/index.md Status Board (Strategy F) ──────────────────────────────
+
+echo "Checking wiki/index.md Status Board..."
+canonical=$(fetch "wiki/index.md") && apply_f "wiki/index.md" "$canonical" || true
+echo
+
+# ─── 8. Obsidian plugins (Strategy A for code, Strategy D for settings) ──────
+
+echo "Checking Obsidian plugins..."
+for plugin in dataview smart-connections metadata-menu templater-obsidian \
+              quickadd obsidian-tasks-plugin obsidian-excalidraw-plugin homepage
+do
+  for asset in main.js manifest.json styles.css; do
+    canonical=$(fetch ".obsidian/plugins/${plugin}/${asset}") || continue
+    apply_a ".obsidian/plugins/${plugin}/${asset}" "$canonical"
+  done
+done
+# Settings worth pinning on first install; never overwritten once present,
+# since the user may have customized fields/templates/choices by then.
+for plugin_data in \
+  "metadata-menu" \
+  "templater-obsidian" \
+  "quickadd" \
+  "homepage"
+do
+  canonical=$(fetch ".obsidian/plugins/${plugin_data}/data.json") || continue
+  apply_d ".obsidian/plugins/${plugin_data}/data.json" "$canonical"
+done
+echo
+
+# ─── 9. .obsidian/community-plugins.json (Strategy E) ────────────────────────
+
+echo "Checking .obsidian/community-plugins.json..."
+canonical=$(fetch ".obsidian/community-plugins.json") && apply_e ".obsidian/community-plugins.json" "$canonical" || true
 echo
 
 # ─── Summary ──────────────────────────────────────────────────────────────────

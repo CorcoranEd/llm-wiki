@@ -24,12 +24,13 @@ Four subagents handle wiki operations. Invoke them via the Agent tool or by nami
 - `_inbox/` — drop zone. The user puts anything here (articles, PDFs, photos, scans, voice memos, web clips, raw notes) to be ingested. Should be empty between ingest sessions.
 - `_raw/` — immutable archive of source material. Claude never edits files here after filing. Every wiki page that draws on a source links back to its file here (`[[_raw/filename]]`).
 - `_raw/assets/` — images extracted from clippings or other sources.
+- `_config/` — admin/schema folder, not vault content: `_config/templates/` (Templater templates, see Conventions) and `_config/fileclasses/` (Metadata Menu fileClass definitions, see Conventions).
 - `wiki/1-Projects/` — active, short-term efforts with a defined goal and end state. Every project gets its own folder named after the project, containing a main page of the same name plus any supporting pages (drafts, correspondence, working notes).
 - `wiki/2-Areas/` — ongoing responsibilities with no end date. Suggested starter Areas (rename/prune to fit the scope above — illustrative, not required): Health, Finance, Home, Career, Relationships, Learning, **People**. For work/research-scoped vaults, swap the scope-specific ones for domain-appropriate equivalents (e.g. Clients, Operations, Skill Areas) — see the example scopes in `README.md`. `People` is worth keeping in every scope: a place for pages about individuals referenced from other docs (family, colleagues, clients, interview subjects). It's filed as an Area, not a Resource, because maintaining a relationship is an ongoing responsibility with no end-state — `wiki/2-Areas/People/People.md` as its index page, each person a sub-topic folder below it (`wiki/2-Areas/People/Jane-Smith/Jane-Smith.md`).
 - `wiki/3-Resources/` — reference material on topics of interest.
 - `wiki/3-Resources/Meta/` — docs describing how this wiki itself works (the llm-wiki pattern docs, the PARA method article). Reference these when changing this schema.
 - `wiki/4-Archives/` — completed projects, inactive areas, retired resources. Mirrors the structure of 1/2/3.
-- `wiki/index.md` — catalog of every wiki page: link, one-line summary, tags, last updated. The first place to look when answering a query.
+- `wiki/index.md` — catalog of every wiki page: link, one-line summary, tags, last updated. Opens with a `## Status Board` of live Dataview queries (up-next tasks, active projects, backlog, unreviewed content), followed by the hand-maintained catalog. The first place to look when answering a query.
 - `wiki/log.md` — append-only log of ingest/query/lint operations, newest entries on top. Each entry starts with `## [YYYY-MM-DD] <ingest|query|lint> | <title>` so it stays greppable.
 - `wiki/issues.md` — persistent issues list maintained by the linter. Open items requiring human judgment: orphan pages, contradictions, missing pages, pages ready to archive, unreviewed content. The curator uses this as its work queue.
 
@@ -57,14 +58,18 @@ Four subagents handle wiki operations. Invoke them via the Agent tool or by nami
 
 ## Conventions
 
-YAML frontmatter on every wiki page (Properties + Bases are enabled, so this drives views/filters):
+Frontmatter is typed via Metadata Menu **fileClasses**, defined in `_config/fileclasses/` (`Project`, `Area`, `Resource`, `Person`), each extending a shared `Base` fileClass rather than one flat schema applying to every page. Non-typed pages (`wiki/index.md`, `wiki/log.md`, `README.md`, `3-Resources/Meta/*`, correspondence sub-pages) fall back to Metadata Menu's global preset fields, which mirror `Base`'s fields.
+
+YAML frontmatter on every typed wiki page (Properties + Bases are enabled, so this drives views/filters):
 
 ```yaml
 ---
+fileClass: Project      # Project | Area | Resource | Person — matches _config/fileclasses/
 tags: [tag1, tag2]
 created: 2026-06-12
 updated: 2026-06-12
-status: active         # for 1-Projects: active | someday | done
+status: active         # for Project: active | on-hold | someday | done; Area: active | inactive; Resource: active | retired; Person: no status field
+priority: medium       # high | medium | low — page-level importance/urgency, see below
 sources: ["[[_raw/some-file.pdf]]"]
 confidence: high       # high | medium | low | unreviewed (default: unreviewed)
 reviewed: 2026-06-12   # date of last deliberate review; linter flags if >6 months stale
@@ -77,7 +82,13 @@ supersedes: []         # wikilinks to pages this one replaces
 
 - `confidence`: how well-supported is the content — `high` (multiple corroborating sources), `medium` (single source or partially verified), `low` (speculative or second-hand), `unreviewed` (not yet assessed). Set by the ingestor on creation. Linter flags `unreviewed` pages older than 30 days.
 - `reviewed`: date the page was last deliberately checked for accuracy. Linter flags pages where `reviewed` is more than 6 months ago.
+- `status` semantics for Project: `active` = currently in motion; `on-hold` = intent exists but blocked by an external dependency or condition (not the same as someday — the project will resume when the blocker clears); `someday` = low-commitment, may never happen; `done` = complete, ready to archive. Area: `active` = standing responsibility currently maintained; `inactive` = no longer maintained (candidate for archiving). Resource: `active` = current reference material; `retired` = superseded or no longer relevant. Person: no `status` field — a person doesn't have a completion/activity state.
+- `priority`: a pure importance/urgency rating, independent of `status`'s lifecycle meaning — a `someday` Project can still be `high` priority (important whenever it resumes), and an `active` one can be `low` priority (in motion but not urgent). Deliberately avoids time-window language like "later," since that would duplicate `status: someday` for Projects. Separate from the `## Tasks` section's per-item priority emoji (🔺⏫🔼🔽, see below), which triages individual checklist items rather than the page as a whole.
 - `superseded_by` / `supersedes`: links two related pages when one replaces another. Superseded pages get archived — once `superseded_by` is set, the old page moves to `wiki/4-Archives/` mirroring its original path. Only frontmatter changes on archive. Wikilinks in `supersedes:` still resolve after archiving since Obsidian links are vault-wide.
+
+**Tasks and Outcomes:**
+
+Page bodies use a `## Tasks` / `## Outcomes` pattern instead of freeform to-dos: `## Tasks` holds checkbox items (`- [ ] Task description`), optionally tagged with a priority emoji (🔺 highest/blocking, ⏫ high, 🔼 medium, no emoji for routine, 🔽 low) assigned by the ingestor or curator based on impact. When a task is checked off, `wiki-curator` confirms completion with the user via `AskUserQuestion`, removes it from `## Tasks`, and appends a one-line result to `## Outcomes` (`- **Task name:** outcome or answer`).
 
 **Typed relationships:**
 
@@ -95,7 +106,7 @@ When a page has significant relationships to other pages beyond simple wikilinks
 
 These are prose but machine-readable enough for the linter to detect contradictions and the librarian to surface them in queries.
 
-Use `[[wikilinks]]` for all cross-references between pages. New pages start from `_templates/note.md`.
+Use `[[wikilinks]]` for all cross-references between pages. New pages start from the fileClass-matched template under `_config/templates/` (`Project.md`/`Area.md`/`Resource.md`/`Person.md`), auto-inserted by Templater based on the folder a note is created in; `_config/templates/note.md` remains the fallback for non-PARA pages. QuickAdd also provides a folder-independent "Capture to Inbox" flow that drops a bare stub in `_inbox/` for later ingestion.
 
 ## Version control
 
@@ -143,13 +154,25 @@ Search scales with vault size:
 
 - **Tier 1 — current (under ~100 pages)**: grep + `wiki/index.md`. Fast, zero setup, already in place. Weaknesses: no synonym matching, no concept-level retrieval.
 
-- **Tier 2 — semantic scaffold (install now, activate when needed)**: Smart Connections Obsidian plugin builds local embeddings passively as you write. No API key, no model download — uses a bundled `bge-micro-v2` model. When MCP-accessible semantic search is needed, add the `smart-connections-mcp` bridge to `~/.claude/settings.json`. Install via Obsidian Community Plugins.
+- **Tier 2 — semantic scaffold (installed, activate when needed)**: Smart Connections Obsidian plugin builds local embeddings passively as you write. No API key, no model download — uses a bundled `bge-micro-v2` model. When MCP-accessible semantic search is needed, add the `smart-connections-mcp` bridge to `~/.claude/settings.json`.
 
 - **Tier 3 — full hybrid search (100–200+ pages)**: qmd (`@tobilu/qmd` on npm) runs BM25 + vector + LLM re-ranking entirely on-device and exposes an MCP server Claude Code queries natively via `qmd_deep_search`. Install: `npm install -g @tobilu/qmd`, then `qmd collection add <vault-path> --name wiki && qmd embed`. Requires ~2GB model download on first run; reindex after bulk ingests with `qmd embed`.
 
 ### Obsidian skills
 
 `obsidian-skills` (`.claude/skills/`) — use for correct Obsidian-flavored markdown (wikilinks, callouts, properties, canvas) and for clipping web pages cleanly via Defuddle.
+
+### Obsidian plugins
+
+- **Templater** — inserts the fileClass-matched template automatically when a new note is created under `1-Projects/`, `2-Areas/`, or `3-Resources/` (folder→template mapping in its settings).
+- **Metadata Menu** — provides the typed frontmatter fields described above, driven by the fileClass definitions in `_config/fileclasses/`.
+- **QuickAdd** — powers the "Capture to Inbox" flow mentioned above.
+- **obsidian-tasks-plugin** — powers querying/dashboards over the `## Tasks` checkbox convention described above, including the Status Board's "Up Next" query.
+- **obsidian-excalidraw-plugin** — for freeform diagrams/drawings, configured to save into an `Excalidraw/` folder at vault root.
+- **homepage** — opens the vault to `wiki/index.md` on startup.
+- **Dataview** — powers `wiki/index.md`'s Status Board queries.
+- **Smart Connections** — see Tier 2 search above.
+- **Never paste real AI-provider API keys into QuickAdd's or Excalidraw's settings panels.** Both plugins' `data.json` are git-tracked and each has a dormant AI-assistant feature with an API key field — populating it would commit the key in plaintext.
 
 ## Setup on a new machine
 
@@ -163,3 +186,5 @@ After the vault is on a new machine:
 4. Optionally install PDF tools for complex documents: `uv add pymupdf4llm marker-pdf`
 
 No other setup should be required for the ingest workflow.
+
+All Obsidian plugin code (`main.js`/`manifest.json`/`styles.css`/`data.json` for Claudian, Templater, Metadata Menu, QuickAdd, Tasks, Excalidraw, Homepage, Dataview, and Smart Connections) is committed to git and travels with the repo, so a fresh clone works with no separate Community Plugins install step — Obsidian just needs the vault trusted and plugins enabled on first open.
