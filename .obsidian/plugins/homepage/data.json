@@ -16,7 +16,7 @@
       "pin": false,
       "commands": [],
       "alwaysApply": false,
-      "hideReleaseNotes": false,
+      "hideReleaseNotes": true,
       "manualOpenCommand": false,
       "separateMobile": false,
       "mobileValue": ""

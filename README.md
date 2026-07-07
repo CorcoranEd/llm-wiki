@@ -10,7 +10,7 @@ This folder is a starter kit for a personal wiki that an AI helps you maintain. 
 - **Claudian** — an Obsidian plugin that connects Claude Code to your vault.
 - **Templater + Metadata Menu** — typed page templates: new pages auto-fill their date fields and title, and get a proper dropdown/date-picker UI for fields like status and priority instead of plain text.
 - **QuickAdd** — a one-click "Capture to Inbox" command for quick notes, no need to navigate to the `_inbox` folder manually.
-- **Dataview, Smart Connections, Tasks, Homepage, Excalidraw** — behind-the-scenes plugins that power the wiki's live status dashboard, local semantic search, task tracking, startup behavior, and freeform diagrams. You won't need to configure any of these yourself.
+- **Dataview, Tasks, Homepage, Excalidraw** — behind-the-scenes plugins that power the wiki's live status dashboard, task tracking, startup behavior, and freeform diagrams. You won't need to configure any of these yourself.
 
 All of the above ship bundled with this repo, the same way Claudian does — nothing extra to install.
 
@@ -43,10 +43,10 @@ Obsidian should already be open with this README showing and the Claudian panel 
 
 For example:
 
-- *"This is a personal wiki for my life as a freelance photographer. Cover client projects, gear research, business admin, and creative inspiration. Out of scope: anything work-related to my day job."*
-- *"This is a research wiki for my PhD on climate policy. Cover academic papers, notes from conferences, draft arguments, and reading lists. Out of scope: personal life stuff."*
-- *"This is a work wiki for a digital product studio. Cover active client projects, proposals, retrospectives, and client relationships, plus skill areas like design, frontend, and strategy. Out of scope: personal finances and anything unrelated to the studio."*
-- *"This is a personal life wiki. Cover finances and budgeting, health and fitness, home, travel plans, and things I'm learning. Out of scope: work projects — those live in a separate vault."*
+- _"This is a personal wiki for my life as a freelance photographer. Cover client projects, gear research, business admin, and creative inspiration. Out of scope: anything work-related to my day job."_
+- _"This is a research wiki for my PhD on climate policy. Cover academic papers, notes from conferences, draft arguments, and reading lists. Out of scope: personal life stuff."_
+- _"This is a work wiki for a digital product studio. Cover active client projects, proposals, retrospectives, and client relationships, plus skill areas like design, frontend, and strategy. Out of scope: personal finances and anything unrelated to the studio."_
+- _"This is a personal life wiki. Cover finances and budgeting, health and fitness, home, travel plans, and things I'm learning. Out of scope: work projects — those live in a separate vault."_
 
 The more specific you are, the better Claude's filing decisions will be. You can always update the scope later by asking Claude to revise it.
 
@@ -56,7 +56,6 @@ Setup added an `_inbox` folder icon to your Dock, sitting next to your Downloads
 
 ## If something goes wrong
 
-- **macOS blocks the script** — right-click `Setup.command`, choose Open, then Open again.
 - **Claudian doesn't load** — you may have dismissed the trust dialog; go to **Settings → Community plugins** and enable Claudian from there.
 - **Claudian doesn't see Claude Code** — run `claude --version` in Terminal. If that fails, re-run `bash setup.sh`.
 
@@ -65,6 +64,10 @@ Setup added an `_inbox` folder icon to your Dock, sitting next to your Downloads
 **Web Clipper** — Install the [Obsidian Web Clipper](https://obsidian.md/clipper) browser extension to save web pages directly to your `_inbox`. In the extension settings, choose this vault and set the save location to `_inbox` — clipped pages land there as markdown, ready to file.
 
 **Backup to GitHub** — This folder uses git to keep a history of every change, so you can undo mistakes or look back at earlier versions. To back it up to GitHub, just ask Claude — it can walk you through the setup.
+
+**Get notified about new inbox items** — instead of remembering to check `_inbox` yourself, ask Claude in the Claudian panel to "loop checking my inbox every 15 minutes" (or similar). It'll let you know when something new lands, without filing it automatically — you still review and file it yourself. This only runs while that Claudian session stays open.
+
+**Connect other apps** — Granola, Google Calendar, Gmail, Google Drive, Slack, and Figma can all be connected so Claude can pull context from them directly. None of these are set up by default — just ask Claude to connect one (e.g. "can you connect my Google Calendar?") and it'll walk you through it. Each is read-only: Claude can look things up but can't send, create, or edit anything through them.
 
 ## Updating an existing wiki
 

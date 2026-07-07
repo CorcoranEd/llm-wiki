@@ -133,10 +133,10 @@
   "mdCSS": "",
   "scriptEngineSettings": {},
   "previousRelease": "2.25.1",
-  "showReleaseNotes": true,
+  "showReleaseNotes": false,
   "excalidrawMasteryPromoCollapsed": false,
   "compareManifestToPluginVersion": true,
-  "showNewVersionNotification": true,
+  "showNewVersionNotification": false,
   "latexBoilerplate": "\\color{green}e=mc^2",
   "latexPreambleLocation": "preamble.sty",
   "taskboneEnabled": false,
@@ -1071,7 +1071,7 @@
       "key": "G"
     }
   ],
-  "showSplashscreen": true,
+  "showSplashscreen": false,
   "pdfSettings": {
     "pageSize": "A4",
     "pageOrientation": "portrait",

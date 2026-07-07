@@ -148,13 +148,15 @@ This repository is intended to be downloaded and set up locally, so each user sh
 
 - **Hazel / Shortcuts** — macOS automation for auto-populating `_inbox/`. Hazel can watch `~/Downloads` and route PDFs, audio files, and exports automatically. Shortcuts handles simpler one-off triggers (share-sheet → `_inbox/`).
 
+- **Inbox monitoring** — from Claudian (Obsidian's embedded Claude Code panel), run `/loop /check-inbox` (self-paced) or `/loop 15m /check-inbox` (fixed interval) to get periodic notifications when new files land in `_inbox/`. Tied to that session's lifecycle, so it stops automatically when Obsidian closes. Notifies only — it doesn't file anything.
+
 ### Search
 
 Search scales with vault size:
 
 - **Tier 1 — current (under ~100 pages)**: grep + `wiki/index.md`. Fast, zero setup, already in place. Weaknesses: no synonym matching, no concept-level retrieval.
 
-- **Tier 2 — semantic scaffold (installed, activate when needed)**: Smart Connections Obsidian plugin builds local embeddings passively as you write. No API key, no model download — uses a bundled `bge-micro-v2` model. When MCP-accessible semantic search is needed, add the `smart-connections-mcp` bridge to `~/.claude/settings.json`.
+- **Tier 2 — semantic scaffold (install when needed)**: Smart Connections Obsidian plugin builds local embeddings passively as you write. No API key, no model download — uses a bundled `bge-micro-v2` model. When MCP-accessible semantic search is needed, add the `smart-connections-mcp` bridge to `~/.claude/settings.json`. Install via Obsidian Community Plugins.
 
 - **Tier 3 — full hybrid search (100–200+ pages)**: qmd (`@tobilu/qmd` on npm) runs BM25 + vector + LLM re-ranking entirely on-device and exposes an MCP server Claude Code queries natively via `qmd_deep_search`. Install: `npm install -g @tobilu/qmd`, then `qmd collection add <vault-path> --name wiki && qmd embed`. Requires ~2GB model download on first run; reindex after bulk ingests with `qmd embed`.
 
@@ -171,8 +173,11 @@ Search scales with vault size:
 - **obsidian-excalidraw-plugin** — for freeform diagrams/drawings, configured to save into an `Excalidraw/` folder at vault root.
 - **homepage** — opens the vault to `wiki/index.md` on startup.
 - **Dataview** — powers `wiki/index.md`'s Status Board queries.
-- **Smart Connections** — see Tier 2 search above.
 - **Never paste real AI-provider API keys into QuickAdd's or Excalidraw's settings panels.** Both plugins' `data.json` are git-tracked and each has a dormant AI-assistant feature with an API key field — populating it would commit the key in plaintext.
+
+### Optional MCP integrations
+
+`.mcp/` holds reference sheets for six optional MCP integrations — Granola, Google Calendar, Gmail, Google Drive, Slack, Figma. None are installed or live by default; they're opt-in and read-only by design (each doc specifies exactly which scopes/tools to grant vs. avoid). When the user asks to connect one, read the matching file in `.mcp/` and follow it — always prefer the official server it documents over a third-party alternative unless the user explicitly wants otherwise.
 
 ## Setup on a new machine
 
@@ -187,4 +192,4 @@ After the vault is on a new machine:
 
 No other setup should be required for the ingest workflow.
 
-All Obsidian plugin code (`main.js`/`manifest.json`/`styles.css`/`data.json` for Claudian, Templater, Metadata Menu, QuickAdd, Tasks, Excalidraw, Homepage, Dataview, and Smart Connections) is committed to git and travels with the repo, so a fresh clone works with no separate Community Plugins install step — Obsidian just needs the vault trusted and plugins enabled on first open.
+All Obsidian plugin code (`main.js`/`manifest.json`/`styles.css`/`data.json` for Claudian, Templater, Metadata Menu, QuickAdd, Tasks, Excalidraw, Homepage, and Dataview) is committed to git and travels with the repo, so a fresh clone works with no separate Community Plugins install step — Obsidian just needs the vault trusted and plugins enabled on first open.

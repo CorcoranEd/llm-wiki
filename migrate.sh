@@ -401,6 +401,14 @@ echo "Checking CLAUDE.md..."
 canonical=$(fetch "CLAUDE.md") && apply_b "$canonical" || true
 echo
 
+# ─── 2.5. README.md (Strategy A) ─────────────────────────────────────────────
+# Unlike CLAUDE.md, README.md has no user-filled content to preserve — plain
+# compare-and-overwrite, same as the agent files.
+
+echo "Checking README.md..."
+canonical=$(fetch "README.md") && apply_a "README.md" "$canonical" || true
+echo
+
 # ─── 3. _config/ directory layout ────────────────────────────────────────────
 # Older vaults ship _templates/note.md at the old location. Move it (with
 # backup) before running the template merge below — otherwise a fresh
@@ -457,7 +465,7 @@ echo
 # ─── 8. Obsidian plugins (Strategy A for code, Strategy D for settings) ──────
 
 echo "Checking Obsidian plugins..."
-for plugin in dataview smart-connections metadata-menu templater-obsidian \
+for plugin in dataview metadata-menu templater-obsidian \
               quickadd obsidian-tasks-plugin obsidian-excalidraw-plugin homepage
 do
   for asset in main.js manifest.json styles.css; do
@@ -471,7 +479,8 @@ for plugin_data in \
   "metadata-menu" \
   "templater-obsidian" \
   "quickadd" \
-  "homepage"
+  "homepage" \
+  "obsidian-excalidraw-plugin"
 do
   canonical=$(fetch ".obsidian/plugins/${plugin_data}/data.json") || continue
   apply_d ".obsidian/plugins/${plugin_data}/data.json" "$canonical"
@@ -482,6 +491,17 @@ echo
 
 echo "Checking .obsidian/community-plugins.json..."
 canonical=$(fetch ".obsidian/community-plugins.json") && apply_e ".obsidian/community-plugins.json" "$canonical" || true
+echo
+
+# ─── 10. .mcp/*.md reference docs (Strategy A) ───────────────────────────────
+# Canonical reference sheets, not user data — safe to overwrite if they drift,
+# same treatment as _config/fileclasses/*.md.
+
+echo "Checking .mcp/ reference docs..."
+for file in CLAUDE Granola Google-Workspace Slack Figma; do
+  canonical=$(fetch ".mcp/${file}.md") || continue
+  apply_a ".mcp/${file}.md" "$canonical"
+done
 echo
 
 # ─── Summary ──────────────────────────────────────────────────────────────────
