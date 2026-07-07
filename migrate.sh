@@ -435,7 +435,7 @@ echo
 # ─── 4. _config/templates/*.md (Strategy C) ──────────────────────────────────
 
 echo "Checking _config/templates/..."
-for file in note Project Area Resource Person inbox-capture; do
+for file in note Project Area Resource Person; do
   canonical=$(fetch "_config/templates/${file}.md") || continue
   apply_c "_config/templates/${file}.md" "$canonical"
 done
@@ -466,7 +466,7 @@ echo
 
 echo "Checking Obsidian plugins..."
 for plugin in dataview metadata-menu templater-obsidian \
-              quickadd obsidian-tasks-plugin obsidian-excalidraw-plugin homepage
+              obsidian-tasks-plugin obsidian-excalidraw-plugin homepage
 do
   for asset in main.js manifest.json styles.css; do
     canonical=$(fetch ".obsidian/plugins/${plugin}/${asset}") || continue
@@ -478,7 +478,6 @@ done
 for plugin_data in \
   "metadata-menu" \
   "templater-obsidian" \
-  "quickadd" \
   "homepage" \
   "obsidian-excalidraw-plugin"
 do

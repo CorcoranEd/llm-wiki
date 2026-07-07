@@ -12,12 +12,12 @@ This is an LLM-maintained wiki: an Obsidian vault organized with the [PARA metho
 
 Four subagents handle wiki operations. Invoke them via the Agent tool or by naming them in a request.
 
-| Agent | Responsibility | When to use |
-| --- | --- | --- |
-| `wiki-ingestor` | Processes `_inbox/` into the wiki — converts files, decides PARA placement, creates/updates pages, files originals to `_raw/` | User drops new material in `_inbox/` and asks to ingest, file, or clip it |
-| `wiki-librarian` | Answers questions from existing wiki content — read-only retrieval and synthesis | User asks a question about what is in the wiki |
-| `wiki-linter` | Health-check pass — orphan pages, broken wikilinks, stale frontmatter, contradictions, retention review; updates `wiki/issues.md` | User asks for a lint or maintenance run |
-| `wiki-curator` | Interactive resolution of open issues — links orphans, archives superseded pages, resolves contradictions, audits content coherence, merges duplicates | User asks to "work through issues" or "curate the wiki" |
+| Agent            | Responsibility                                                                                                                                         | When to use                                                               |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `wiki-ingestor`  | Processes `_inbox/` into the wiki — converts files, decides PARA placement, creates/updates pages, files originals to `_raw/`                          | User drops new material in `_inbox/` and asks to ingest, file, or clip it |
+| `wiki-librarian` | Answers questions from existing wiki content — read-only retrieval and synthesis                                                                       | User asks a question about what is in the wiki                            |
+| `wiki-linter`    | Health-check pass — orphan pages, broken wikilinks, stale frontmatter, contradictions, retention review; updates `wiki/issues.md`                      | User asks for a lint or maintenance run                                   |
+| `wiki-curator`   | Interactive resolution of open issues — links orphans, archives superseded pages, resolves contradictions, audits content coherence, merges duplicates | User asks to "work through issues" or "curate the wiki"                   |
 
 ## Structure
 
@@ -64,17 +64,17 @@ YAML frontmatter on every typed wiki page (Properties + Bases are enabled, so th
 
 ```yaml
 ---
-fileClass: Project      # Project | Area | Resource | Person — matches _config/fileclasses/
+fileClass: Project # Project | Area | Resource | Person — matches _config/fileclasses/
 tags: [tag1, tag2]
 created: 2026-06-12
 updated: 2026-06-12
-status: active         # for Project: active | on-hold | someday | done; Area: active | inactive; Resource: active | retired; Person: no status field
-priority: medium       # high | medium | low — page-level importance/urgency, see below
+status: active # for Project: active | on-hold | someday | done; Area: active | inactive; Resource: active | retired; Person: no status field
+priority: medium # high | medium | low — page-level importance/urgency, see below
 sources: ["[[_raw/some-file.pdf]]"]
-confidence: high       # high | medium | low | unreviewed (default: unreviewed)
-reviewed: 2026-06-12   # date of last deliberate review; linter flags if >6 months stale
-superseded_by: ""      # wikilink to newer page if this one is replaced
-supersedes: []         # wikilinks to pages this one replaces
+confidence: high # high | medium | low | unreviewed (default: unreviewed)
+reviewed: 2026-06-12 # date of last deliberate review; linter flags if >6 months stale
+superseded_by: "" # wikilink to newer page if this one is replaced
+supersedes: [] # wikilinks to pages this one replaces
 ---
 ```
 
@@ -106,7 +106,7 @@ When a page has significant relationships to other pages beyond simple wikilinks
 
 These are prose but machine-readable enough for the linter to detect contradictions and the librarian to surface them in queries.
 
-Use `[[wikilinks]]` for all cross-references between pages. New pages start from the fileClass-matched template under `_config/templates/` (`Project.md`/`Area.md`/`Resource.md`/`Person.md`), auto-inserted by Templater based on the folder a note is created in; `_config/templates/note.md` remains the fallback for non-PARA pages. QuickAdd also provides a folder-independent "Capture to Inbox" flow that drops a bare stub in `_inbox/` for later ingestion.
+Use `[[wikilinks]]` for all cross-references between pages. New pages start from the fileClass-matched template under `_config/templates/` (`Project.md`/`Area.md`/`Resource.md`/`Person.md`), auto-inserted by Templater based on the folder a note is created in; `_config/templates/note.md` remains the fallback for non-PARA pages.
 
 ## Version control
 
@@ -140,15 +140,11 @@ This repository is intended to be downloaded and set up locally, so each user sh
 
 ### Optional ingest sources
 
-- **apple-mail-mcp** — MCP server for pulling emails directly into an ingest session without manual export. Install: `claude plugin marketplace add patrickfreyer/apple-mail-mcp`. Requires Mail.app automation permission in System Settings.
-
-- **transcriptor-mcp** — MCP server for YouTube, podcast, and video transcription via yt-dlp and local Whisper. Add to `~/.claude/settings.json` when video/podcast content is a regular ingest source. See github.com/samson-art/transcriptor-mcp.
-
 - **Obsidian Web Clipper** — official Obsidian browser extension for quick web capture outside Claude sessions. Set the destination folder to `_inbox/`. Complements Defuddle (Defuddle is used inside Claude sessions; Web Clipper is for browser-side quick capture).
 
-- **Hazel / Shortcuts** — macOS automation for auto-populating `_inbox/`. Hazel can watch `~/Downloads` and route PDFs, audio files, and exports automatically. Shortcuts handles simpler one-off triggers (share-sheet → `_inbox/`).
-
 - **Inbox monitoring** — from Claudian (Obsidian's embedded Claude Code panel), run `/loop /check-inbox` (self-paced) or `/loop 15m /check-inbox` (fixed interval) to get periodic notifications when new files land in `_inbox/`. Tied to that session's lifecycle, so it stops automatically when Obsidian closes. Notifies only — it doesn't file anything.
+
+- **`/review`** — a broader read-only status check than `/check-inbox`: inbox count, a summary of open `wiki/issues.md` sections, pages with `confidence: unreviewed`, pages with stale `reviewed:` dates, and one suggested next action. Capped at 20 lines. Also pairs with `/loop` for periodic check-ins when a fuller picture than inbox-only is wanted.
 
 ### Search
 
@@ -168,12 +164,11 @@ Search scales with vault size:
 
 - **Templater** — inserts the fileClass-matched template automatically when a new note is created under `1-Projects/`, `2-Areas/`, or `3-Resources/` (folder→template mapping in its settings).
 - **Metadata Menu** — provides the typed frontmatter fields described above, driven by the fileClass definitions in `_config/fileclasses/`.
-- **QuickAdd** — powers the "Capture to Inbox" flow mentioned above.
 - **obsidian-tasks-plugin** — powers querying/dashboards over the `## Tasks` checkbox convention described above, including the Status Board's "Up Next" query.
 - **obsidian-excalidraw-plugin** — for freeform diagrams/drawings, configured to save into an `Excalidraw/` folder at vault root.
 - **homepage** — opens the vault to `wiki/index.md` on startup.
 - **Dataview** — powers `wiki/index.md`'s Status Board queries.
-- **Never paste real AI-provider API keys into QuickAdd's or Excalidraw's settings panels.** Both plugins' `data.json` are git-tracked and each has a dormant AI-assistant feature with an API key field — populating it would commit the key in plaintext.
+- **Never paste real AI-provider API keys into Excalidraw's settings panel.** Its `data.json` is git-tracked and has a dormant AI-assistant feature with an API key field — populating it would commit the key in plaintext.
 
 ### Optional MCP integrations
 
@@ -192,4 +187,4 @@ After the vault is on a new machine:
 
 No other setup should be required for the ingest workflow.
 
-All Obsidian plugin code (`main.js`/`manifest.json`/`styles.css`/`data.json` for Claudian, Templater, Metadata Menu, QuickAdd, Tasks, Excalidraw, Homepage, and Dataview) is committed to git and travels with the repo, so a fresh clone works with no separate Community Plugins install step — Obsidian just needs the vault trusted and plugins enabled on first open.
+All Obsidian plugin code (`main.js`/`manifest.json`/`styles.css`/`data.json` for Claudian, Templater, Metadata Menu, Tasks, Excalidraw, Homepage, and Dataview) is committed to git and travels with the repo, so a fresh clone works with no separate Community Plugins install step — Obsidian just needs the vault trusted and plugins enabled on first open.

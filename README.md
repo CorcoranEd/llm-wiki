@@ -1,20 +1,28 @@
-# Setting up this wiki (Mac)
+# LLM Wiki
 
-This folder is a starter kit for a personal wiki that an AI helps you maintain. You drop in articles, PDFs, notes, whatever — and it gets filed, cross-referenced, and kept tidy for you. This guide assumes you've never used a terminal or installed developer tools before.
+This folder is a starter kit for a personal wiki that an AI helps you maintain. You drop in articles, PDFs, notes, whatever — and it gets filed, cross-referenced, and kept tidy for you.
 
-## What you're installing and why
+- **You never have to organize anything yourself** — drop a file in and it gets filed, cross-referenced, and tidied automatically.
+- **It can make connections you might not** — ask a question and get an answer that draws on everything you've filed, surfacing links between notes you hadn't thought to make yourself.
+- **It checks itself** — ask for a lint pass and it flags what needs attention before problems pile up silently.
+- **It can review the wiki for issues and contradictions, and clean up on request** — ask Claude to "work through issues" or "curate the wiki" and it archives finished projects, merges duplicates, and resolves conflicts.
+
+## Setting up this wiki (Mac)
+
+This guide assumes you've never used a terminal or installed developer tools before so dont stress.
+
+### What you're installing and why
 
 - **[Obsidian](https://obsidian.md)** — the app you'll use to read and write notes.
 - **Claude Code** — the AI that does the filing and organizing.
 - **uv** — a small helper Claude Code uses to convert PDFs and documents into text.
 - **Claudian** — an Obsidian plugin that connects Claude Code to your vault.
 - **Templater + Metadata Menu** — typed page templates: new pages auto-fill their date fields and title, and get a proper dropdown/date-picker UI for fields like status and priority instead of plain text.
-- **QuickAdd** — a one-click "Capture to Inbox" command for quick notes, no need to navigate to the `_inbox` folder manually.
 - **Dataview, Tasks, Homepage, Excalidraw** — behind-the-scenes plugins that power the wiki's live status dashboard, task tracking, startup behavior, and freeform diagrams. You won't need to configure any of these yourself.
 
-All of the above ship bundled with this repo, the same way Claudian does — nothing extra to install.
+All of the above ship bundled with this repo — nothing extra to install.
 
-## 1. Run the setup script and log in
+### 1. Run the setup script and log in
 
 Open **Terminal** (press `Cmd+Space`, type "Terminal", hit Enter) and paste this one command:
 
@@ -34,7 +42,7 @@ If you need to log in later, open Terminal and run:
 claude
 ```
 
-## 2. Make it yours
+### 2. Make it yours
 
 Obsidian should already be open with this README showing and the Claudian panel ready in the right sidebar (if not, launch Obsidian from Applications — your wiki will already be in the vault list).
 
@@ -50,11 +58,11 @@ For example:
 
 The more specific you are, the better Claude's filing decisions will be. You can always update the scope later by asking Claude to revise it.
 
-## 3. Try it out
+### 3. Try it out
 
 Setup added an `_inbox` folder icon to your Dock, sitting next to your Downloads/Trash — drag any file onto it (a PDF, an article, a photo, a note) to drop it in, then ask Claude in the Claudian panel to file it. That's the wiki's normal way of taking in new material.
 
-## If something goes wrong
+### If something goes wrong
 
 - **Claudian doesn't load** — you may have dismissed the trust dialog; go to **Settings → Community plugins** and enable Claudian from there.
 - **Claudian doesn't see Claude Code** — run `claude --version` in Terminal. If that fails, re-run `bash setup.sh`.
@@ -66,6 +74,8 @@ Setup added an `_inbox` folder icon to your Dock, sitting next to your Downloads
 **Backup to GitHub** — This folder uses git to keep a history of every change, so you can undo mistakes or look back at earlier versions. To back it up to GitHub, just ask Claude — it can walk you through the setup.
 
 **Get notified about new inbox items** — instead of remembering to check `_inbox` yourself, ask Claude in the Claudian panel to "loop checking my inbox every 15 minutes" (or similar). It'll let you know when something new lands, without filing it automatically — you still review and file it yourself. This only runs while that Claudian session stays open.
+
+**Get a status report** — ask Claude to "/review" for a quick read-only summary: what's waiting in your inbox, open issues worth your attention, notes that haven't been checked for accuracy yet, and a suggestion for what to do next. Pairs well with the loop trick above if you want it repeated automatically.
 
 **Connect other apps** — Granola, Google Calendar, Gmail, Google Drive, Slack, and Figma can all be connected so Claude can pull context from them directly. None of these are set up by default — just ask Claude to connect one (e.g. "can you connect my Google Calendar?") and it'll walk you through it. Each is read-only: Claude can look things up but can't send, create, or edit anything through them.
 
