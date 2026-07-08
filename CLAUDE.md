@@ -21,7 +21,7 @@ Four subagents handle wiki operations. Invoke them via the Agent tool or by nami
 
 ## Structure
 
-- `_inbox/` — drop zone. The user puts anything here (articles, PDFs, photos, scans, voice memos, web clips, raw notes) to be ingested. Should be empty between ingest sessions.
+- `_inbox/` — drop zone. The user puts anything here (articles, PDFs, photos, scans, voice memos, web clips, raw notes) to be ingested. Should be empty between ingest sessions. If the user instead shares a file directly in the chat (an attachment, pasted content, or a file path) and asks to ingest it, first copy the exact original file into `_inbox/` unmodified (preserve the original filename; disambiguate on collision, e.g. append `-2`), then proceed with the normal ingest procedure via `wiki-ingestor`. Never ingest directly from the chat attachment's original location — always stage it through `_inbox/` first so `_raw/` provenance stays consistent.
 - `_raw/` — immutable archive of source material. Claude never edits files here after filing. Every wiki page that draws on a source links back to its file here (`[[_raw/filename]]`).
 - `_raw/assets/` — images extracted from clippings or other sources.
 - `_config/` — admin/schema folder, not vault content: `_config/templates/` (Templater templates, see Conventions) and `_config/fileclasses/` (Metadata Menu fileClass definitions, see Conventions).
