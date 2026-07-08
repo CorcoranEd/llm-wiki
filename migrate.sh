@@ -492,17 +492,6 @@ echo "Checking .obsidian/community-plugins.json..."
 canonical=$(fetch ".obsidian/community-plugins.json") && apply_e ".obsidian/community-plugins.json" "$canonical" || true
 echo
 
-# ─── 10. .mcp/*.md reference docs (Strategy A) ───────────────────────────────
-# Canonical reference sheets, not user data — safe to overwrite if they drift,
-# same treatment as _config/fileclasses/*.md.
-
-echo "Checking .mcp/ reference docs..."
-for file in CLAUDE Granola Google-Workspace Slack Figma; do
-  canonical=$(fetch ".mcp/${file}.md") || continue
-  apply_a ".mcp/${file}.md" "$canonical"
-done
-echo
-
 # ─── Summary ──────────────────────────────────────────────────────────────────
 
 echo "───────────────────────────────────────────────────────────"

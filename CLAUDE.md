@@ -170,9 +170,15 @@ Search scales with vault size:
 - **Dataview** — powers `wiki/index.md`'s Status Board queries.
 - **Never paste real AI-provider API keys into Excalidraw's settings panel.** Its `data.json` is git-tracked and has a dormant AI-assistant feature with an API key field — populating it would commit the key in plaintext.
 
-### Optional MCP integrations
+### claude.ai connectors
 
-`.mcp/` holds reference sheets for six optional MCP integrations — Granola, Google Calendar, Gmail, Google Drive, Slack, Figma. None are installed or live by default; they're opt-in and read-only by design (each doc specifies exactly which scopes/tools to grant vs. avoid). When the user asks to connect one, read the matching file in `.mcp/` and follow it — always prefer the official server it documents over a third-party alternative unless the user explicitly wants otherwise.
+Connectors configured on claude.ai (Settings → Connectors) are automatically available as tools in Claude Code sessions too — no local `.mcp.json` or per-repo OAuth setup needed. They show up as deferred tools named `mcp__claude_ai_<ServerName>__*` (e.g. `mcp__claude_ai_Granola__get_meetings`); use ToolSearch to discover and load one when a task calls for it. Availability depends on the user's claude.ai account, not anything in this repo, so don't assume a fixed list — check when needed.
+
+Categories typically useful for this vault's ingest/research workflows, if connected: meeting-notes tools (e.g. Granola) for Projects/People ingestion, calendar/email/drive tools for correspondence and source documents, chat tools (e.g. Slack) for conversation context, design tools (e.g. Figma) for Resource pages.
+
+Default to read-only use of any connector in the vault workflow — read, don't send/create/write via a connector — even if it exposes write tools, unless the user explicitly asks for a write action. This is a behavioral guideline, not a technical restriction: permission/scope enforcement now lives in the connector's claude.ai configuration, not in this repo.
+
+When the user asks to connect a new service, check whether claude.ai already has (or offers) a connector for it — via ToolSearch for an already-connected `mcp__claude_ai_*` match, or by pointing the user to Settings → Connectors on claude.ai to add one — and direct them to configure it there rather than setting up a local MCP server in this repo.
 
 ## Setup on a new machine
 
