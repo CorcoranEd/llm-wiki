@@ -1,11 +1,13 @@
 # LLM Wiki
 
-This folder is a starter kit for a personal wiki that an AI helps you maintain. You drop in articles, PDFs, notes, whatever — and it gets filed, cross-referenced, and kept tidy for you.
+This is a starter kit for a personal wiki that an LLM helps you maintain — drop in articles, PDFs, notes, whatever, and Claude takes it from there.
 
-- **You never have to organize anything yourself** — drop a file in and it gets filed, cross-referenced, and tidied automatically.
-- **It can make connections you might not** — ask a question and get an answer that draws on everything you've filed, surfacing links between notes you hadn't thought to make yourself.
+Most personal wikis and note piles die the same way: keeping them organized is manual work, so the upkeep quietly stops after a few weeks and the notes stop being useful. This one is built so that doesn't happen — an LLM does the tending, which means the payoff compounds instead of decaying. The longer you use it, the more useful it gets.
+
+- **It organizes everything for you** — drop a file in and it gets filed, cross-referenced, and tidied up automatically.
+- **It makes connections you might not** — ask a question and get an answer that draws on everything you've filed, surfacing links between notes you hadn't thought to make yourself.
 - **It checks itself** — ask for a lint pass and it flags what needs attention before problems pile up silently.
-- **It can review the wiki for issues and contradictions, and clean up on request** — ask Claude to "work through issues" or "curate the wiki" and it archives finished projects, merges duplicates, and resolves conflicts.
+- **It cleans up after itself** — ask to "curate the wiki" or "work through issues" and it archives finished projects, merges duplicates, and resolves contradictions.
 
 ## Setting up this wiki (Mac)
 
