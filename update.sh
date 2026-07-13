@@ -1,9 +1,9 @@
 #!/bin/bash
 # Sync an existing llm-wiki vault to the latest schema.
 # Run from your wiki root:
-#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/CorcoranEd/llm-wiki/main/migrate.sh)"
+#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/CorcoranEd/llm-wiki/main/update.sh)"
 # Or from a local copy:
-#   bash migrate.sh
+#   bash update.sh
 #
 # Flags:
 #   -n, --dry-run   Show what would change without touching any files.
@@ -38,12 +38,12 @@ fi
 # ─── Verify wiki root ─────────────────────────────────────────────────────────
 if [ ! -f "CLAUDE.md" ] || [ ! -d ".claude" ]; then
   echo "This doesn't look like an llm-wiki root (CLAUDE.md or .claude/ not found)."
-  echo "Run migrate.sh from the root of your existing wiki."
+  echo "Run update.sh from the root of your existing wiki."
   exit 1
 fi
 
 REPO_RAW="https://raw.githubusercontent.com/CorcoranEd/llm-wiki/main"
-BACKUP_DIR=".migration-backup/$(date '+%Y%m%d-%H%M%S')"
+BACKUP_DIR=".update-backup/$(date '+%Y%m%d-%H%M%S')"
 SCOPE_PLACEHOLDER="<fill in — whose life/domain does this vault cover, and what's out of scope?>"
 
 UPDATED=0

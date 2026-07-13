@@ -89,23 +89,23 @@ From now on, each time you open a new chat, Claude briefly checks in with what's
 
 ## Updating an existing wiki
 
-If you set up this wiki a while ago, `migrate.sh` brings it up to date with the current schema — new plugins, page templates, field definitions, `CLAUDE.md`, agent instructions, skills, and hooks — without touching your actual notes or content.
+If you set up this wiki a while ago, `update.sh` brings it up to date with the current schema — new plugins, page templates, field definitions, `CLAUDE.md`, agent instructions, skills, and hooks — without touching your actual notes or content.
 
 From your wiki folder, run:
 
 ```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/CorcoranEd/llm-wiki/main/migrate.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/CorcoranEd/llm-wiki/main/update.sh)"
 ```
 
-Or, if you already have this folder downloaded: `bash migrate.sh`.
+Or, if you already have this folder downloaded: `bash update.sh`.
 
 Add `--dry-run` first to see exactly what would change before anything is written, and `--verbose` for full details:
 
 ```sh
-bash migrate.sh --dry-run --verbose
+bash update.sh --dry-run --verbose
 ```
 
-Every file it changes is backed up first, to `.migration-backup/<timestamp>/` in your wiki folder — nothing is overwritten without a copy saved. The one structural change it makes automatically: if your wiki still has `_templates/note.md`, it gets moved to `_config/templates/note.md` as part of this update — that's expected, not an error.
+Every file it changes is backed up first, to `.update-backup/<timestamp>/` in your wiki folder — nothing is overwritten without a copy saved. The one structural change it makes automatically: if your wiki still has `_templates/note.md`, it gets moved to `_config/templates/note.md` as part of this update — that's expected, not an error.
 
 ## Going deeper
 
