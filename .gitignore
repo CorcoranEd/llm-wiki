@@ -32,3 +32,6 @@ __pycache__/
 
 # Obsidian
 .obsidian/workspace
+
+# Claude Code local runtime state (per-user, not template content)
+.claude/state/

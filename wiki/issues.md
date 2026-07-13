@@ -1,14 +1,14 @@
 ---
 tags: [meta, maintenance]
 created: 2026-07-04
-updated: 2026-07-04
+updated: 2026-07-13
 ---
 
 # Wiki Issues
 
 Open issues requiring human judgment. Maintained by the linter — resolved items are removed on the next lint pass or by the curator. Use `wiki-curator` to work through these interactively.
 
-Last updated: 2026-07-04
+Last updated: 2026-07-13
 
 ## Orphan Pages
 
@@ -22,6 +22,12 @@ Pages with `superseded_by` set that are still in the active wiki.
 
 <!-- - [[Old Page]] superseded by [[New Page]] -->
 <!-- mv wiki/PATH/Old-Page/ wiki/4-Archives/PATH/Old-Page/ -->
+
+## Broken Wikilinks
+
+`[[Links]]` with no matching page. Curator auto-fixes confident, unambiguous matches on its next run; ambiguous ones stay here for review.
+
+<!-- - [[Broken Link]] in [[Page Name]] — no confident match found -->
 
 ## Contradictions
 
@@ -46,3 +52,15 @@ Pages with `confidence: unreviewed` older than 30 days.
 Pages where `reviewed` is more than 6 months ago.
 
 <!-- - [[Page Name]] — last reviewed YYYY-MM-DD -->
+
+## Skipped Heading Levels
+
+A heading skips a level (e.g. `##` directly followed by `####`).
+
+<!-- - [[Page Name]] — `##` followed by `####` under "Section Name" -->
+
+## Duplicate Content
+
+Paragraphs or bullets repeated verbatim across pages.
+
+<!-- - [[Page A]] and [[Page B]] — shared passage: "..." -->

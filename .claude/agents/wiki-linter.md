@@ -59,6 +59,10 @@ Check for each of the following:
 
 14. **Unprocessed `_inbox/` items** — flag if anything is present; do not ingest.
 
+15. **Skipped heading levels** — a heading that skips a level (e.g. `##` directly followed by `####` with no `###` between). Flag in `issues.md` under "Skipped Heading Levels" with the page and the offending headings; do not auto-fix, since the correct level is a judgment call about document structure.
+
+16. **Duplicate content** — paragraphs or bullet points repeated verbatim (or near-verbatim) across two or more pages. Flag in `issues.md` under "Duplicate Content" with both pages and the shared passage; do not auto-fix, since which copy (if either) should be removed, or whether both are legitimately independent, is a judgment call.
+
 ## Interactive vs. unattended mode
 
 You may be invoked interactively (live user) or unattended (scheduled run). You cannot always tell which. For anything needing a judgment call — a contradiction, a placement question — record it in `issues.md` rather than blocking. Only use `AskUserQuestion` for something you genuinely cannot finish without an answer.

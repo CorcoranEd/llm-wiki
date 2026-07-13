@@ -380,6 +380,76 @@ PYEOF
   UPDATED=$((UPDATED + 1))
 }
 
+# ─── Strategy G: append missing named sections ───────────────────────────────
+# For wiki/issues.md. Like Strategy D, never touches existing content — but
+# also appends any "## " section present in canonical and absent locally
+# (matched by heading text), so new issue categories the linter/curator rely
+# on show up even on a vault that already has its own issues.md with live
+# content in the original sections.
+
+apply_g() {
+  local file="$1" canonical="$2"
+
+  if [ ! -f "$file" ]; then
+    apply_d "$file" "$canonical"
+    return
+  fi
+
+  local tmp_canonical result
+  tmp_canonical=$(mktemp)
+  printf '%s\n' "$canonical" > "$tmp_canonical"
+
+  result=$(python3 - "$file" "$tmp_canonical" <<'PYEOF'
+import sys
+local_path, canon_path = sys.argv[1], sys.argv[2]
+with open(local_path) as f:
+    local = f.read()
+with open(canon_path) as f:
+    canon = f.read()
+
+def sections(text):
+    lines = text.split('\n')
+    heads = [i for i, l in enumerate(lines) if l.startswith('## ')]
+    out = {}
+    for idx, start in enumerate(heads):
+        end = heads[idx + 1] if idx + 1 < len(heads) else len(lines)
+        heading = lines[start].strip()
+        out[heading] = '\n'.join(lines[start:end]).rstrip('\n') + '\n'
+    return out
+
+canon_sections = sections(canon)
+local_sections = sections(local)
+
+missing = [h for h in canon_sections if h not in local_sections]
+if not missing:
+    print("UNCHANGED", end='')
+    sys.exit(0)
+
+appended = local.rstrip('\n') + '\n'
+for h in missing:
+    appended += '\n' + canon_sections[h]
+
+print(appended, end='')
+PYEOF
+)
+  rm -f "$tmp_canonical"
+
+  if [ "$result" = "UNCHANGED" ]; then
+    echo "  ✓ up to date: $file"
+    [ "$DRY_RUN" = 0 ] && SKIPPED=$((SKIPPED + 1))
+    return
+  fi
+
+  if [ "$DRY_RUN" = 1 ]; then
+    echo "  [dry-run] would update: $file  (append missing issue-type sections)"
+  else
+    backup_file "$file"
+    printf '%s' "$result" > "$file"
+    echo "  ✓ updated: $file  (appended missing issue-type sections)"
+  fi
+  UPDATED=$((UPDATED + 1))
+}
+
 # ─── 1. Agent files and commands (Strategy A) ─────────────────────────────────
 
 echo "Checking agent files and commands..."
@@ -388,11 +458,39 @@ for file in \
   ".claude/agents/wiki-librarian.md" \
   ".claude/agents/wiki-linter.md" \
   ".claude/agents/wiki-curator.md" \
-  ".claude/commands/review.md"
+  ".claude/commands/review.md" \
+  ".claude/commands/check-inbox.md"
 do
   canonical=$(fetch "$file") || continue
   apply_a "$file" "$canonical"
 done
+echo
+
+# ─── 1.5. Skills (Strategy A) ─────────────────────────────────────────────────
+
+echo "Checking skills..."
+for file in \
+  ".claude/skills/wiki-quality-check/SKILL.md"
+do
+  canonical=$(fetch "$file") || continue
+  apply_a "$file" "$canonical"
+done
+echo
+
+# ─── 1.6. Hooks and settings (Strategy A, then mark hook scripts executable) ──
+
+echo "Checking hooks and settings..."
+for file in \
+  ".claude/settings.json" \
+  ".claude/hooks/session-start-greeting.sh" \
+  ".claude/hooks/scope-setup-check.sh"
+do
+  canonical=$(fetch "$file") || continue
+  apply_a "$file" "$canonical"
+done
+if [ "$DRY_RUN" = 0 ]; then
+  chmod +x .claude/hooks/session-start-greeting.sh .claude/hooks/scope-setup-check.sh 2>/dev/null || true
+fi
 echo
 
 # ─── 2. CLAUDE.md (Strategy B) ───────────────────────────────────────────────
@@ -450,10 +548,10 @@ for file in Base Project Area Resource Person; do
 done
 echo
 
-# ─── 6. wiki/issues.md (Strategy D) ──────────────────────────────────────────
+# ─── 6. wiki/issues.md (Strategy G) ───────────────────────────────────────────
 
 echo "Checking wiki/issues.md..."
-canonical=$(fetch "wiki/issues.md") && apply_d "wiki/issues.md" "$canonical" || true
+canonical=$(fetch "wiki/issues.md") && apply_g "wiki/issues.md" "$canonical" || true
 echo
 
 # ─── 7. wiki/index.md Status Board (Strategy F) ──────────────────────────────

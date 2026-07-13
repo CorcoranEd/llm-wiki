@@ -12,12 +12,12 @@ This is an LLM-maintained wiki: an Obsidian vault organized with the [PARA metho
 
 Four subagents handle wiki operations. Invoke them via the Agent tool or by naming them in a request.
 
-| Agent            | Responsibility                                                                                                                                         | When to use                                                               |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `wiki-ingestor`  | Processes `_inbox/` into the wiki — converts files, decides PARA placement, creates/updates pages, files originals to `_raw/`                          | User drops new material in `_inbox/` and asks to ingest, file, or clip it |
-| `wiki-librarian` | Answers questions from existing wiki content — read-only retrieval and synthesis                                                                       | User asks a question about what is in the wiki                            |
-| `wiki-linter`    | Health-check pass — orphan pages, broken wikilinks, stale frontmatter, contradictions, retention review; updates `wiki/issues.md`                      | User asks for a lint or maintenance run                                   |
-| `wiki-curator`   | Interactive resolution of open issues — links orphans, archives superseded pages, resolves contradictions, audits content coherence, merges duplicates | User asks to "work through issues" or "curate the wiki"                   |
+| Agent            | Responsibility                                                                                                                                                                                                   | When to use                                                                      |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `wiki-ingestor`  | Processes `_inbox/` into the wiki — converts files, decides PARA placement, creates/updates pages, files originals to `_raw/`                                                                                    | User drops new material in `_inbox/` and asks to ingest, file, or clip it        |
+| `wiki-librarian` | Answers questions from existing wiki content — read-only retrieval and synthesis                                                                                                                                 | User asks a question about what is in the wiki                                   |
+| `wiki-linter`    | Health-check pass — orphan pages, broken wikilinks, skipped heading levels, duplicate content, stale frontmatter, contradictions, retention review; detection-only, updates `wiki/issues.md`                     | User asks for a lint or maintenance run                                          |
+| `wiki-curator`   | Interactive resolution of open issues — links orphans, archives superseded pages, resolves contradictions, audits content coherence, merges duplicates; auto-triages low-risk issues, reviews human-edited pages | User asks to "work through issues", "curate the wiki", or "review my edits to X" |
 
 ## Structure
 
@@ -32,7 +32,7 @@ Four subagents handle wiki operations. Invoke them via the Agent tool or by nami
 - `wiki/4-Archives/` — completed projects, inactive areas, retired resources. Mirrors the structure of 1/2/3.
 - `wiki/index.md` — catalog of every wiki page: link, one-line summary, tags, last updated. Opens with a `## Status Board` of live Dataview queries (up-next tasks, active projects, backlog, unreviewed content), followed by the hand-maintained catalog. The first place to look when answering a query.
 - `wiki/log.md` — append-only log of ingest/query/lint operations, newest entries on top. Each entry starts with `## [YYYY-MM-DD] <ingest|query|lint> | <title>` so it stays greppable.
-- `wiki/issues.md` — persistent issues list maintained by the linter. Open items requiring human judgment: orphan pages, contradictions, missing pages, pages ready to archive, unreviewed content. The curator uses this as its work queue.
+- `wiki/issues.md` — persistent issues list maintained by the linter. Open items requiring human judgment: orphan pages, broken wikilinks, contradictions, missing pages, pages ready to archive, unreviewed content, skipped heading levels, duplicate content. The curator uses this as its work queue — auto-triaging low-risk/high-confidence entries itself, and surfacing the rest for interactive resolution.
 
 ### Folder rules
 
@@ -146,6 +146,10 @@ This repository is intended to be downloaded and set up locally, so each user sh
 
 - **`/review`** — a broader read-only status check than `/check-inbox`: inbox count, a summary of open `wiki/issues.md` sections, pages with `confidence: unreviewed`, pages with stale `reviewed:` dates, and one suggested next action. Capped at 20 lines. Also pairs with `/loop` for periodic check-ins when a fuller picture than inbox-only is wanted.
 
+- **Auto linting** — `/loop 1h "run wiki-linter for a full health-check pass"` (or self-paced, no interval). Safe fully unattended: `wiki-linter` only writes to `wiki/issues.md`, never edits page content beyond mechanical frontmatter fixes, and never calls `AskUserQuestion` — every iteration completes without a human present.
+
+- **Low-risk auto-triage curator** — `/loop 1h "run wiki-curator in auto-triage-only mode"`. In this mode `wiki-curator` applies only its low-risk/high-confidence fixes (see the agent table above) and never calls `AskUserQuestion`; everything else it finds stays queued in `wiki/issues.md` untouched. Each iteration reports a one-line summary (`"auto-fixed N, M queued for review"`) so the queue's growth is visible without interrupting you. This is a distinct mode from the normal interactive "work through issues" / "curate the wiki" request, which still asks for confirmation on anything not auto-actionable.
+
 ### Search
 
 Search scales with vault size:
@@ -191,6 +195,6 @@ After the vault is on a new machine:
 3. Optionally install whisper.cpp for local audio transcription: `brew install whisper.cpp ffmpeg`
 4. Optionally install PDF tools for complex documents: `uv add pymupdf4llm marker-pdf`
 
-No other setup should be required for the ingest workflow.
+No other setup should be required for the ingest workflow. Two `SessionStart` hooks (wired via `.claude/settings.json`) require `jq` (`brew install jq`), commonly preinstalled — if missing, they fail silently and are simply skipped: the session-start greeting (`.claude/hooks/session-start-greeting.sh`), and a nudge to fill in the Scope line above if it's still the template placeholder (`.claude/hooks/scope-setup-check.sh`) — the latter becomes a permanent no-op the moment Scope is set.
 
 All Obsidian plugin code (`main.js`/`manifest.json`/`styles.css`/`data.json` for Claudian, Templater, Metadata Menu, Tasks, Excalidraw, Homepage, and Dataview) is committed to git and travels with the repo, so a fresh clone works with no separate Community Plugins install step — Obsidian just needs the vault trusted and plugins enabled on first open.

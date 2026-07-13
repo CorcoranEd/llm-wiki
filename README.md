@@ -58,11 +58,13 @@ For example:
 - _"This is a work wiki for a digital product studio. Cover active client projects, proposals, retrospectives, and client relationships, plus skill areas like design, frontend, and strategy. Out of scope: personal finances and anything unrelated to the studio."_
 - _"This is a personal life wiki. Cover finances and budgeting, health and fitness, home, travel plans, and things I'm learning. Out of scope: work projects — those live in a separate vault."_
 
-The more specific you are, the better Claude's filing decisions will be. You can always update the scope later by asking Claude to revise it.
+The more specific you are, the better Claude's filing decisions will be. You can always update the scope later by asking Claude to revise it. (If you skip this step, Claude will ask automatically the next time you open a chat, until you answer.)
 
 ### 3. Try it out
 
 Setup added an `_inbox` folder icon to your Dock, sitting next to your Downloads/Trash — drag any file onto it (a PDF, an article, a photo, a note) to drop it in, then ask Claude in the Claudian panel to file it. That's the wiki's normal way of taking in new material.
+
+From now on, each time you open a new chat, Claude briefly checks in with what's waiting for you — new inbox items, open issues, anything it auto-fixed since last time. It skips this if there's nothing to report, or if you're just continuing an earlier conversation.
 
 ### If something goes wrong
 
@@ -79,11 +81,15 @@ Setup added an `_inbox` folder icon to your Dock, sitting next to your Downloads
 
 **Get a status report** — ask Claude to "/review" for a quick read-only summary: what's waiting in your inbox, open issues worth your attention, notes that haven't been checked for accuracy yet, and a suggestion for what to do next. Pairs well with the loop trick above if you want it repeated automatically.
 
+**Run health checks automatically** — ask Claude to "loop running a lint pass every hour" to keep `wiki/issues.md` current in the background, safe to leave running unattended since it never edits your notes, only flags things.
+
+**Auto-fix the safe stuff** — ask Claude to "loop running the curator in auto-triage mode every hour" to have it quietly fix only the low-risk, high-confidence issues it finds (like an obviously-broken link with one clear match) and leave everything else queued for you to review later — never asks you anything while running this way.
+
 **Connect other apps** — Granola, Google Calendar, Gmail, Google Drive, Slack, and Figma can all be connected so Claude can pull context from them directly. None of these are set up by default — just ask Claude to connect one (e.g. "can you connect my Google Calendar?") and it'll walk you through it. Each is read-only: Claude can look things up but can't send, create, or edit anything through them.
 
 ## Updating an existing wiki
 
-If you set up this wiki a while ago, `migrate.sh` brings it up to date with the current schema — new plugins, page templates, field definitions, `CLAUDE.md`, and agent instructions — without touching your actual notes or content.
+If you set up this wiki a while ago, `migrate.sh` brings it up to date with the current schema — new plugins, page templates, field definitions, `CLAUDE.md`, agent instructions, skills, and hooks — without touching your actual notes or content.
 
 From your wiki folder, run:
 
