@@ -136,8 +136,25 @@ apply_b() {
 
   # Only substitute if the user has filled it in (not still the placeholder)
   if [ -n "$scope" ] && [ "$scope" != "$SCOPE_PLACEHOLDER" ]; then
-    canonical=$(printf '%s\n' "$canonical" \
-      | sed "s|^\*\*Scope\*\*:.*|**Scope**: $scope|")
+    # Literal string replace via python3, not sed — sed's replacement text treats
+    # `&` as "insert the matched pattern," so a scope containing `&` (e.g. "vision
+    # & strategy work") would splice the placeholder text back into itself.
+    local tmp_canonical
+    tmp_canonical=$(mktemp)
+    printf '%s' "$canonical" > "$tmp_canonical"
+    canonical=$(python3 - "$scope" "$tmp_canonical" <<'PYEOF'
+import sys
+scope, path = sys.argv[1], sys.argv[2]
+with open(path) as f:
+    lines = f.read().split('\n')
+for i, line in enumerate(lines):
+    if line.startswith('**Scope**:'):
+        lines[i] = f'**Scope**: {scope}'
+        break
+sys.stdout.write('\n'.join(lines))
+PYEOF
+)
+    rm -f "$tmp_canonical"
     log_verbose "Scope injected into canonical before comparison"
   fi
 
@@ -450,6 +467,29 @@ PYEOF
   UPDATED=$((UPDATED + 1))
 }
 
+# ─── 0.5. Legacy command rename (must run before the commands sync below) ────
+# /review used to be the quick read-only status snapshot; that behavior is now
+# /status, and /review has been repurposed for the curator's work-through-issues
+# process. Move an existing vault's old review.md out of the way first so the
+# Strategy A pass below can create the new review.md and status.md cleanly,
+# instead of the old content just being silently overwritten with new meaning.
+
+echo "Checking for legacy command renames..."
+if [ -f ".claude/commands/review.md" ] && [ ! -f ".claude/commands/status.md" ] \
+   && grep -q "Surface open wiki tasks and questions worth your attention" ".claude/commands/review.md" 2>/dev/null; then
+  if [ "$DRY_RUN" = 1 ]; then
+    echo "  [dry-run] would move: .claude/commands/review.md -> .claude/commands/status.md (old /review renamed to /status)"
+  else
+    backup_file ".claude/commands/review.md"
+    mv ".claude/commands/review.md" ".claude/commands/status.md"
+    echo "  ✓ moved: .claude/commands/review.md -> .claude/commands/status.md (old /review renamed to /status)"
+  fi
+  UPDATED=$((UPDATED + 1))
+else
+  log_verbose "no legacy review.md -> status.md rename needed"
+fi
+echo
+
 # ─── 1. Agent files and commands (Strategy A) ─────────────────────────────────
 
 echo "Checking agent files and commands..."
@@ -458,7 +498,11 @@ for file in \
   ".claude/agents/wiki-librarian.md" \
   ".claude/agents/wiki-linter.md" \
   ".claude/agents/wiki-curator.md" \
+  ".claude/commands/status.md" \
+  ".claude/commands/triage.md" \
   ".claude/commands/review.md" \
+  ".claude/commands/auto-fix.md" \
+  ".claude/commands/sync-templates.md" \
   ".claude/commands/check-inbox.md"
 do
   canonical=$(fetch "$file") || continue
@@ -483,13 +527,14 @@ echo "Checking hooks and settings..."
 for file in \
   ".claude/settings.json" \
   ".claude/hooks/session-start-greeting.sh" \
-  ".claude/hooks/scope-setup-check.sh"
+  ".claude/hooks/scope-setup-check.sh" \
+  ".claude/hooks/update-sync-check.sh"
 do
   canonical=$(fetch "$file") || continue
   apply_a "$file" "$canonical"
 done
 if [ "$DRY_RUN" = 0 ]; then
-  chmod +x .claude/hooks/session-start-greeting.sh .claude/hooks/scope-setup-check.sh 2>/dev/null || true
+  chmod +x .claude/hooks/session-start-greeting.sh .claude/hooks/scope-setup-check.sh .claude/hooks/update-sync-check.sh 2>/dev/null || true
 fi
 echo
 

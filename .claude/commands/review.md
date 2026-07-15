@@ -1,34 +1,15 @@
 ---
-description: Surface open wiki tasks and questions worth your attention — inbox items, open issues, unreviewed content, and stale pages. Does not file or modify anything.
+description: Work through open wiki/issues.md interactively and run proactive curation — archiving, merging, resolving contradictions, upgrading confidence, syncing outdated pages. Asks for confirmation on anything not mechanically safe — not recommended for unattended /loop use, see /auto-fix for that.
 ---
 
-You are doing a quick wiki review pass. Report only — do not ingest, lint, or modify any files.
+Invoke the `wiki-curator` agent (`.claude/agents/wiki-curator.md`) for its full "work through issues"/proactive-curation pass:
 
-**1. Inbox**
+1. Auto-fix pass first — mechanically-safe fixes only, no confirmation needed.
+2. Work through everything remaining in `wiki/issues.md`, section by section.
+3. Proactive curation: task priority assessment, completed-task resolution, confidence upgrades, duplicate merges, cross-link enrichment, sources audit, PARA reclassification, cluster synthesis offers, relationship graph completion, content coherence audit.
 
-List files currently in `_inbox/` (ignore `README.md` and dotfiles).
-- If empty: "Inbox clear."
-- If not empty: list count and filenames.
+This calls `AskUserQuestion` for anything requiring judgment, so it is **not** safe for unattended `/loop` runs. For an unattended-safe subset that never asks questions, use `/auto-fix` instead.
 
-**2. Open issues**
+Report a summary per `wiki-curator.md`'s "After a session" format: how many issues auto-fixed, resolved interactively, deferred, and any human-edited pages reviewed.
 
-Read `wiki/issues.md`. For each non-empty section, summarise the count and the most actionable items (up to 3 per section). Skip sections with no items.
-
-**3. Unreviewed content**
-
-Grep frontmatter across `wiki/` for `confidence: unreviewed`. List pages found, ordered by `created` date (oldest first, up to 5). These are pages that have never been assessed for reliability.
-
-**4. Stale reviews**
-
-Grep for `reviewed:` dates older than 6 months from today. List up to 5 oldest. These are pages that may contain outdated information.
-
-**5. Suggested next action**
-
-Based on the above, name the single most valuable thing to do next:
-- If inbox is non-empty → "Run wiki-ingestor to process N items."
-- If there are ready-to-archive pages → "Run wiki-curator to archive superseded pages."
-- If there are many unreviewed pages → "Run wiki-curator to upgrade confidence ratings."
-- If issues.md is long → "Run wiki-curator to work through open issues."
-- If everything is clear → "Nothing urgent — consider a lint pass to check for drift."
-
-Keep the whole report under 20 lines. This command is designed to be run with `/loop` for periodic check-ins.
+Note: this is the full vault-wide pass. To review one specific page you just edited yourself, just ask directly (e.g. "review my edits to X") rather than running this command — that's a separate, narrower capability described in `wiki-curator.md`'s "Human-edited page review" section.

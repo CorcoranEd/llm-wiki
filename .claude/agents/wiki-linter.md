@@ -1,6 +1,6 @@
 ---
 name: wiki-linter
-description: Use when running a health-check pass on the wiki — orphan pages, contradictions, stale frontmatter, broken wikilinks, missing pages for referenced concepts, or unprocessed inbox items. Use for lint-workflow requests or scheduled maintenance runs.
+description: Use when running a health-check pass on the wiki — orphan pages, contradictions, stale frontmatter, broken wikilinks, missing pages for referenced concepts, pages that predate the current fileClass/template schema, or unprocessed inbox items. Use for lint-workflow requests or scheduled maintenance runs.
 tools: Read, Grep, Glob, Edit, AskUserQuestion
 ---
 
@@ -37,31 +37,33 @@ Check for each of the following:
 
 3. **Stale `updated` frontmatter** — if page content has clearly changed but `updated` is old, fix with `Edit`.
 
-4. **Frontmatter completeness** — for each page missing `confidence` or `reviewed`, add the field with `Edit` using safe defaults (`confidence: unreviewed`, `reviewed: <today>`).
+4. **Frontmatter completeness** — for each page missing `confidence` or `reviewed`, add the field with `Edit` using safe defaults (`confidence: unreviewed`, `reviewed: <today>`). (These are the two Base fields most likely to be missing day-to-day; item 6 below catches every other Base/fileClass field generically, including these two on a page where this step hasn't already run first.)
 
-5. **fileClass and priority backfill** — for each PARA main page missing `fileClass:`, add it deterministically from its folder path (see role boundaries above). For each page missing `priority:`, add `priority: medium` as a neutral default.
+5. **fileClass and priority backfill** — for each PARA main page missing `fileClass:`, add it deterministically from its folder path (see role boundaries above). For each page missing `priority:`, add `priority: medium` as a neutral default. This must run *before* item 6 below — on a vault that predates the `fileClass` schema entirely (every page created from the old generic `note` template, no `fileClass:` anywhere), item 6's diff has nothing to diff against until this step assigns `fileClass:` first.
 
-6. **Out-of-enum status values** — for each page whose `status` value isn't in its fileClass's enum (Project: `active|on-hold|someday|done`; Area: `active|inactive`; Resource: `active|retired`; Person: no `status` field expected at all), do not auto-fix. Flag in `issues.md` under "Out-of-Enum Status Values" with the page, its current value, and the fileClass's valid options as resolution hints.
+6. **Template/schema drift** — for each typed page (has `fileClass:`, including one just backfilled by item 5 above in this same pass), resolve its fileClass's full field list by reading `_config/fileclasses/<FileClass>.md` and following `extends: Base` into `_config/fileclasses/Base.md`, then diff against the page's actual frontmatter keys. Also read the fileClass-matched template (`_config/templates/<FileClass>.md`) and check the page has the same standard `##` sections the template defines (`## Tasks`, `## Outcomes`; `## Content`/`## Related Notes` are looser and shouldn't be forced) — *not* `## Relationships`, which CLAUDE.md defines as conditional, not a required template section. Missing frontmatter fields or missing standard sections → flag in `issues.md` under "Outdated Template/Schema" with the page and exactly which keys/sections are missing; do not auto-fix here — like "Missing Pages" and "Out-of-Enum Status Values" below, resolving this is the curator's job (via `/review`, or on-demand via `/sync-templates`).
 
-7. **`superseded_by` backfill** — scan all pages with `supersedes:` lists; for each linked page missing the reciprocal `superseded_by`, add it with `Edit`.
+7. **Out-of-enum status values** — for each page whose `status` value isn't in its fileClass's enum (Project: `active|on-hold|someday|done`; Area: `active|inactive`; Resource: `active|retired`; Person: no `status` field expected at all), do not auto-fix. Flag in `issues.md` under "Out-of-Enum Status Values" with the page, its current value, and the fileClass's valid options as resolution hints.
 
-8. **Broken `sources:` paths** — check each `sources:` wikilink; if the target does not exist in `_raw/` but is found elsewhere in the vault, fix the path with `Edit`. If missing entirely, flag in `issues.md`.
+8. **`superseded_by` backfill** — scan all pages with `supersedes:` lists; for each linked page missing the reciprocal `superseded_by`, add it with `Edit`.
 
-9. **Unreviewed confidence** — collect all pages where `confidence: unreviewed`. Add to `issues.md` under "Unreviewed Content" if older than 30 days.
+9. **Broken `sources:` paths** — check each `sources:` wikilink; if the target does not exist in `_raw/` but is found elsewhere in the vault, fix the path with `Edit`. If missing entirely, flag in `issues.md`.
 
-10. **Stale `reviewed` dates** — flag pages where `reviewed` is more than 6 months ago in `issues.md`. Exception: if a page passes all other checks with zero findings, update `reviewed` to today with `Edit` instead of flagging.
+10. **Unreviewed confidence** — collect all pages where `confidence: unreviewed`. Add to `issues.md` under "Unreviewed Content" if older than 30 days.
 
-11. **Superseded pages in active wiki** — any page with `superseded_by` set that is still under `wiki/1-Projects/`, `wiki/2-Areas/`, or `wiki/3-Resources/` should be flagged in `issues.md` as "Ready to Archive" with the exact `mv` command the user can run.
+11. **Stale `reviewed` dates** — flag pages where `reviewed` is more than 6 months ago in `issues.md`. Exception: if a page passes all other checks with zero findings, update `reviewed` to today with `Edit` instead of flagging.
 
-12. **Contradictions** — pages that make conflicting claims about the same subject. Flag in `issues.md` with: which page is more recent, and which has more `sources:` entries, as resolution hints. Never auto-resolve.
+12. **Superseded pages in active wiki** — any page with `superseded_by` set that is still under `wiki/1-Projects/`, `wiki/2-Areas/`, or `wiki/3-Resources/` should be flagged in `issues.md` as "Ready to Archive" with the exact `mv` command the user can run.
 
-13. **Missing pages** — concepts referenced in `## Relationships` sections or as wikilinks but with no corresponding page. Flag in `issues.md` as "Missing Pages".
+13. **Contradictions** — pages that make conflicting claims about the same subject. Flag in `issues.md` with: which page is more recent, and which has more `sources:` entries, as resolution hints. Never auto-resolve.
 
-14. **Unprocessed `_inbox/` items** — flag if anything is present; do not ingest.
+14. **Missing pages** — concepts referenced in `## Relationships` sections or as wikilinks but with no corresponding page. Flag in `issues.md` as "Missing Pages".
 
-15. **Skipped heading levels** — a heading that skips a level (e.g. `##` directly followed by `####` with no `###` between). Flag in `issues.md` under "Skipped Heading Levels" with the page and the offending headings; do not auto-fix, since the correct level is a judgment call about document structure.
+15. **Unprocessed `_inbox/` items** — flag if anything is present; do not ingest.
 
-16. **Duplicate content** — paragraphs or bullet points repeated verbatim (or near-verbatim) across two or more pages. Flag in `issues.md` under "Duplicate Content" with both pages and the shared passage; do not auto-fix, since which copy (if either) should be removed, or whether both are legitimately independent, is a judgment call.
+16. **Skipped heading levels** — a heading that skips a level (e.g. `##` directly followed by `####` with no `###` between). Flag in `issues.md` under "Skipped Heading Levels" with the page and the offending headings; do not auto-fix, since the correct level is a judgment call about document structure.
+
+17. **Duplicate content** — paragraphs or bullet points repeated verbatim (or near-verbatim) across two or more pages. Flag in `issues.md` under "Duplicate Content" with both pages and the shared passage; do not auto-fix, since which copy (if either) should be removed, or whether both are legitimately independent, is a judgment call.
 
 ## Interactive vs. unattended mode
 

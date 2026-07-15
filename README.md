@@ -79,11 +79,11 @@ From now on, each time you open a new chat, Claude briefly checks in with what's
 
 **Get notified about new inbox items** — instead of remembering to check `_inbox` yourself, ask Claude in the Claudian panel to "loop checking my inbox every 15 minutes" (or similar). It'll let you know when something new lands, without filing it automatically — you still review and file it yourself. This only runs while that Claudian session stays open.
 
-**Get a status report** — ask Claude to "/review" for a quick read-only summary: what's waiting in your inbox, open issues worth your attention, notes that haven't been checked for accuracy yet, and a suggestion for what to do next. Pairs well with the loop trick above if you want it repeated automatically.
+**Get a status report** — run `/status` for a quick read-only summary: what's waiting in your inbox, open issues worth your attention, notes that haven't been checked for accuracy yet, and a suggestion for what to do next. Pairs well with the loop trick above if you want it repeated automatically.
 
-**Run health checks automatically** — ask Claude to "loop running a lint pass every hour" to keep `wiki/issues.md` current in the background, safe to leave running unattended since it never edits your notes, only flags things.
+**Run health checks automatically** — `/loop 1h /triage` keeps `wiki/issues.md` current in the background, safe to leave running unattended since it never edits your notes, only flags things.
 
-**Auto-fix the safe stuff** — ask Claude to "loop running the curator in auto-triage mode every hour" to have it quietly fix only the low-risk, high-confidence issues it finds (like an obviously-broken link with one clear match) and leave everything else queued for you to review later — never asks you anything while running this way.
+**Auto-fix the safe stuff** — `/loop 1h /auto-fix` quietly fixes only the low-risk, high-confidence issues it finds (like an obviously-broken link with one clear match) and leaves everything else queued for you to review later — never asks you anything while running this way.
 
 **Connect other apps** — Granola, Google Calendar, Gmail, Google Drive, Slack, and Figma can all be connected so Claude can pull context from them directly. None of these are set up by default — just ask Claude to connect one (e.g. "can you connect my Google Calendar?") and it'll walk you through it. Each is read-only: Claude can look things up but can't send, create, or edit anything through them.
 
@@ -106,6 +106,23 @@ bash update.sh --dry-run --verbose
 ```
 
 Every file it changes is backed up first, to `.update-backup/<timestamp>/` in your wiki folder — nothing is overwritten without a copy saved. The one structural change it makes automatically: if your wiki still has `_templates/note.md`, it gets moved to `_config/templates/note.md` as part of this update — that's expected, not an error.
+
+`update.sh` only touches schema/config files, never your actual notes — so if it added new fields or sections to the page templates, your existing pages won't have them yet. Next time you open Claude it'll notice and offer to run `/sync-templates` to catch your pages up (purely additive — it only adds what's missing, never touches anything already there); you can also just ask for it directly any time.
+
+## Commands
+
+A few `/` commands cover the wiki's common maintenance tasks. Each pairs with `/loop [interval]` for periodic unattended runs — self-paced if you omit the interval, or on a fixed schedule like `/loop 1h`. A loop only runs for as long as its Claudian session stays open.
+
+| Command | What it does | Safe to loop unattended? |
+| --- | --- | --- |
+| `/check-inbox` | Reports what's waiting in `_inbox/` — count and filenames only. Never files anything. | Yes — `/loop /check-inbox` |
+| `/status` | Quick read-only snapshot: inbox, open issues, unreviewed pages, stale pages, one suggested next step. Capped at 20 lines. | Yes — `/loop 30m /status` |
+| `/triage` | Full health-check pass: scans the vault, auto-fixes purely mechanical issues, flags the rest into `wiki/issues.md`. | Yes — `/loop 1h /triage` |
+| `/review` | Works through open issues and runs proactive curation — archiving, merging, resolving contradictions, upgrading confidence. | No — asks questions along the way |
+| `/auto-fix` | The loop-safe slice of `/review`: fixes only low-risk, high-confidence issues, leaves the rest queued. Never asks questions. | Yes — `/loop 1h /auto-fix` |
+| `/sync-templates` | Brings existing pages up to date with the latest fileClass/template schema — run this after `update.sh`. | Not typically looped — usually a one-off after an update |
+
+`/review` and `/auto-fix` both drive the curator — `/review` is the full interactive pass, `/auto-fix` is the slice of it that never blocks waiting on you.
 
 ## Going deeper
 
