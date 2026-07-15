@@ -77,14 +77,6 @@ From now on, each time you open a new chat, Claude briefly checks in with what's
 
 **Backup to GitHub** — This folder uses git to keep a history of every change, so you can undo mistakes or look back at earlier versions. To back it up to GitHub, just ask Claude — it can walk you through the setup.
 
-**Get notified about new inbox items** — instead of remembering to check `_inbox` yourself, ask Claude in the Claudian panel to "loop checking my inbox every 15 minutes" (or similar). It'll let you know when something new lands, without filing it automatically — you still review and file it yourself. This only runs while that Claudian session stays open.
-
-**Get a status report** — run `/status` for a quick read-only summary: what's waiting in your inbox, open issues worth your attention, notes that haven't been checked for accuracy yet, and a suggestion for what to do next. Pairs well with the loop trick above if you want it repeated automatically.
-
-**Run health checks automatically** — `/loop 1h /triage` keeps `wiki/issues.md` current in the background, safe to leave running unattended since it never edits your notes, only flags things.
-
-**Auto-fix the safe stuff** — `/loop 1h /auto-fix` quietly fixes only the low-risk, high-confidence issues it finds (like an obviously-broken link with one clear match) and leaves everything else queued for you to review later — never asks you anything while running this way.
-
 **Connect other apps** — Granola, Google Calendar, Gmail, Google Drive, Slack, and Figma can all be connected so Claude can pull context from them directly. None of these are set up by default — just ask Claude to connect one (e.g. "can you connect my Google Calendar?") and it'll walk you through it. Each is read-only: Claude can look things up but can't send, create, or edit anything through them.
 
 ## Updating an existing wiki
